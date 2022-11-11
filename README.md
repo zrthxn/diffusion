@@ -11,8 +11,6 @@ from Kaggle.
 The smiling or not smiling is not relevant to me, I just want to generate a face. 
 I will combine all the categories of faces into one single dataset.
 
-<hr>
-
 ## Usage
 
 Basic usage
