@@ -1,0 +1,16 @@
+# Dataset and general parameters
+device: "cpu"
+batch_size: 32
+
+# Noise Scheduler parameters
+noise: "linear"
+timesteps: 300
+start: 0.001
+end: 1.000
+
+# Model shape parameters
+channels: (1,2,3)
+
+# Training parameterss
+lr: 0.0001
+epochs: 10
