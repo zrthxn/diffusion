@@ -1,7 +1,8 @@
 from logging import info
+from typing import List
 from matplotlib import pyplot as plt
 from torch.utils.data import Dataset, DataLoader
-from torch import Tensor, no_grad
+from torch import Tensor, no_grad, clamp
 
 class ImageDataset(Dataset):
     images = list()
@@ -14,20 +15,32 @@ class ImageDataset(Dataset):
 
     @no_grad()
     @staticmethod
-    def plot(images: list, res = 4, denorm = True):
+    def plot(images: list, res = 4, denorm = True, save = None):
         ncols = min(len(images), 8)
         nrows = len(images) // ncols
         if ncols * nrows < len(images):
             nrows += 1
 
-        _, ax = plt.subplots(nrows, ncols, figsize=(res * ncols, res * nrows))
-        ax = ax.flatten()
-        for img, ax in zip(images, ax):
+        fig, ax = plt.subplots(nrows, ncols, 
+            figsize=(res * ncols, res * nrows),
+            sharey=True,
+            sharex=True)
+
+        fig.set_dpi(240)
+        axes: List[plt.Axes] = ax.flatten()
+        for img, ax in zip(images, axes):
             img = img.detach().permute(1, 2, 0)
             if denorm:
                 img = (img + 1.) / 2.
+                img = clamp(img, 0.0, 1.0)
             ax.imshow(img)
-        plt.show()
+            ax.set_axis_off()
+        
+        fig.tight_layout(pad=2.0)
+        if save is None:
+            plt.show()
+        else:
+            plt.savefig(save)
 
     def head(self):
         self.plot(self.images[:5])

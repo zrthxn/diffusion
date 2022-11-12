@@ -23,6 +23,15 @@ def makeconfig(argv: list[str]):
         assert name in config_dict.keys(), "Cannot add configurations"
         config_dict[name] = type(config_dict[name])(value)
 
+    if config_dict["dryrun"]:
+        config_dict = { **config_dict,
+            "batch_size": 16,
+            "timesteps": 8,
+            "start": 0.001,
+            "end": 1.000,
+            "epochs": 1,
+        }
+
     defaults.__dict__ = config_dict
     defaults.keys = config_dict
 
@@ -38,10 +47,8 @@ def print_help():
         
     COMMANDS:
     
-        train   Train a new ensemble model
-        test    Test a trained ensemble and get benchmarks. Can be used with `load`
-        load    Load a trained ensemble from disk.
-        plot    Plot predictions for a trained ensemble.
+        train   Train a new diffusion model
+        test    Generate images from a trained model.
         help    Print this help message
     
     OPTIONS:

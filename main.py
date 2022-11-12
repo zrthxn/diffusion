@@ -1,11 +1,12 @@
 #!python
-
 import torch
 import logging
 import coloredlogs
+import pickle
 from sys import argv
 from time import time
 from tqdm import tqdm
+from typing import Tuple
 from logging import info
 from torch.nn import functional as F
 
@@ -15,12 +16,38 @@ from noise import NoiseScheduler
 from model import DenoisingDiffusion
 
 
-def train(ds: ImageDataset) -> torch.nn.Module:
+def generate(model: torch.nn.Module, ns: NoiseScheduler):
+    image = torch.randn((1, 3, 64, 64), device=defaults.device)
+
+    for t in range(ns.steps)[::-1]:
+        beta = ns.schedule[t]
+        alphas_ = ns.sqrt_alphas_[t]
+        alphas_rp = ns.sqrt_alpha_rp[t]
+        
+        # Call model (noise - prediction)
+        pred = (beta * model(image, torch.tensor([t])) / alphas_)
+        generated = alphas_rp * (image - pred)
+        
+        if t > 0:
+            noise = torch.randn_like(image)
+            generated += torch.sqrt(ns.posterior_variance[t]) * noise 
+    
+    return generated.squeeze()
+
+
+def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
     info("Start Training")
+
+    if defaults.dataset == "faces":
+        ds = FacesDataset()
+    elif defaults.dataset == "cars":
+        ds = CarsDataset()
+    else:
+        raise ValueError(f"Unknown dataset `{defaults.dataset}`")
 
     dl = ds.loader(defaults.batch_size)
     ns = NoiseScheduler(
-        ntype=defaults.noise, 
+        ntype=defaults.schedule, 
         steps=defaults.timesteps, 
         start=defaults.start,
         end=defaults.end)
@@ -39,6 +66,9 @@ def train(ds: ImageDataset) -> torch.nn.Module:
     __start = time()
     for E in range(defaults.epochs):
         print(f"Epoch {E}/{defaults.epochs}")
+        ImageDataset.plot([ generate(model, ns) for _ in range(8) ], 
+            save=f"results/training/epoch_{E}.png")
+
         for batch in tqdm(dl):
             optim.zero_grad()
 
@@ -50,15 +80,20 @@ def train(ds: ImageDataset) -> torch.nn.Module:
 
             loss.backward()
             optim.step()
+
+            if defaults.dryrun: 
+                break
+
     __end = time()
-    info(f"Training time was {(__end - __start)/(1e3 * 60)} minutes.")
+    info(f"Training time {round((__end - __start)/(1e3 * 60), 3)} minutes.")
 
-    return model
+    return model, ns
 
 
-def test():
+def test(model: torch.nn.Module, ns: NoiseScheduler):
     info("Start Testing")
-    pass
+    ImageDataset.plot([ generate(model, ns) for _ in range(16) ], 
+        save=f"results/generated.png")
 
 
 if __name__ == "__main__":
@@ -79,21 +114,26 @@ if __name__ == "__main__":
 
     # Build default config params
     makeconfig(params)
-    
-    if defaults.dataset == "faces":
-        ds = FacesDataset()
-    elif defaults.dataset == "cars":
-        ds = CarsDataset()
-    else:
-        raise ValueError(f"Unknown dataset `{defaults.dataset}`")
 
+    model = None
+    ns = None
     for command in actions:
         if command == "train":
-            train(ds)
+            model, ns = train()
+            with open("results/model.mdl", "wb") as f:
+                torch.save(model, f)
+            with open("results/scheduler.pkl", "wb") as f:
+                pickle.dump(ns, f)
+        
         elif command == "test":
-            test()
-        elif command == "load": pass
-        elif command == "plot": pass
+            if model is None:
+                with open("results/model.mdl", "rb") as f:
+                    model = torch.load(f)
+            if ns is None:
+                with open("results/scheduler.pkl", "rb") as f:
+                    ns = pickle.load(f)
+            test(model, ns)
+        
         else:
             print(f"Unknown command `{command}`")
             print_help()

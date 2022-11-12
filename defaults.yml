@@ -3,16 +3,19 @@ device: "cpu"
 dataset: "faces"
 batch_size: 16
 debug: False
+dryrun: False
 
 # Noise Scheduler parameters
-noise: "linear" 
+schedule: "linear" 
 timesteps: 300
 start: 0.001
 end: 0.500
 
 # Model shape
 shape:
+  # Downsampling
   - [64, 128, 256, 512, 1024]
+  # Upsampling
   - [1024, 512, 256, 128, 64]
 
 # Training parameterss
