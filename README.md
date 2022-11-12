@@ -22,7 +22,7 @@ pipenv shell
 pipenv install
 ```
 ```bash
-python main.py
+./main.py train
 ```
 
 ## Resources

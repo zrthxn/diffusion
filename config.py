@@ -1,21 +1,13 @@
+from yaml import safe_load
+
 class Configuration:
     def __init__(self, config: dict) -> None:
         self.__dict__ = config
         self.keys = config
-        
+
 # Every key in config should be at the root depth
-defaults = Configuration({
-    "device": "cpu",
-    "batch_size": 32,
-
-    "noise": "linear", 
-    "timesteps": 300,
-    "start": 0.001,
-    "end": 1.000,
-
-    "lr": 1e-3,
-    "epochs": 10,
-})
+with open("defaults.yml", 'r') as f:
+    defaults = Configuration(safe_load(f))
 
 def makeconfig(argv: list[str]):
     config_dict = defaults.keys
@@ -35,7 +27,9 @@ def makeconfig(argv: list[str]):
     defaults.keys = config_dict
 
 def print_help():
-    print("""
+    nspaces = lambda n: ''.join([' ' for _ in range(n)])
+    options = '\n'.join([f"\t{k}{nspaces(15-len(k))}{v}" for k, v in defaults.keys.items()][:-1])
+    print(f"""
     Usage:
         ./main.py [COMMANDS] [OPTIONS]
         
@@ -52,7 +46,8 @@ def print_help():
     
     OPTIONS:
     
-    
+    {options}
         
     Help String
     """)
+    exit(0)

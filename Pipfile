@@ -5,10 +5,11 @@ name = "pypi"
 
 [packages]
 torch = "*"
-opencv-python = "*"
 matplotlib = "*"
 torchvision = "*"
 coloredlogs = "*"
+tqdm = "*"
+pyyaml = "*"
 
 [dev-packages]
 ipykernel = "*"
