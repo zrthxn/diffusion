@@ -20,4 +20,4 @@ shape:
 
 # Training parameterss
 lr: 0.001
-epochs: 10
+epochs: 50
