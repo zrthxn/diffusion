@@ -12,7 +12,7 @@ tqdm = "*"
 pyyaml = "*"
 
 [dev-packages]
-ipykernel = "<=6.16.2"
+ipykernel = "*"
 
 [requires]
 python_version = "3.10"
