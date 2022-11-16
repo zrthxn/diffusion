@@ -3,6 +3,7 @@ from torchvision.io import read_image
 from logging import info
 
 from . import ImageDataset
+from config import defaults
 
 class FacesDataset(ImageDataset):
     """
@@ -21,7 +22,8 @@ class FacesDataset(ImageDataset):
 
         for f in paths:
             try:
-                im = read_image(f)#.permute(1, 2, 0)
+                im = read_image(f).to(defaults.device)
+                #.permute(1, 2, 0)
                 if norm:
                     im = ((im / 255.) * 2.) - 1.
                 self.images.append(im)
