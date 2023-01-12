@@ -18,7 +18,8 @@ class NoiseScheduler:
         ntype: str, 
         steps: int, 
         start = 0.001, 
-        end = 1.000) -> None:
+        end = 1.000,
+        device = 'cpu') -> None:
         
         info(f"Using {ntype} noise schedule")
         info(f"Scheduled from {start} to {end} in {steps} steps")
@@ -27,6 +28,7 @@ class NoiseScheduler:
         self.steps = steps
         self.start = start
         self.end = end
+        self.device = device
 
         if ntype == 'linear':
             self.schedule = linear(steps, start, end)
@@ -55,4 +57,4 @@ class NoiseScheduler:
         sqrta_t_ = self.sqrt_alphas_[timestep]
 
         diff = (sqrta_t * input_) + (sqrta_t_ * noise) 
-        return diff, noise
+        return diff.to(self.device), noise.to(self.device)
