@@ -3,7 +3,7 @@ from torchvision.io import read_image
 from logging import info
 
 from . import ImageDataset
-from config import defaults
+from src.config import defaults
 
 class FacesDataset(ImageDataset):
     """

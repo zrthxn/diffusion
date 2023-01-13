@@ -9,7 +9,7 @@ class Configuration:
 with open("defaults.yml", 'r') as f:
     defaults = Configuration(safe_load(f))
 
-def makeconfig(argv: list[str]):
+def makeconfig(argv: list):
     config_dict = defaults.keys
     for arg in argv:
         if not arg: continue

@@ -10,10 +10,10 @@ from typing import Tuple
 from logging import info
 from torch.nn import functional as F
 
-from config import defaults, makeconfig, print_help
 from data import ImageDataset, FacesDataset, CarsDataset
-from noise import NoiseScheduler
-from model import DenoisingDiffusion
+from src.config import defaults, makeconfig, print_help
+from src.noise import NoiseScheduler
+from src.model import DenoisingDiffusion
 
 
 def generate(model: torch.nn.Module, ns: NoiseScheduler):
@@ -120,17 +120,17 @@ if __name__ == "__main__":
     for command in actions:
         if command == "train":
             model, ns = train()
-            with open("results/model.mdl", "wb") as f:
+            with open("results/model.pt", "wb") as f:
                 torch.save(model, f)
-            with open("results/scheduler.pkl", "wb") as f:
+            with open("results/scheduler.pt", "wb") as f:
                 pickle.dump(ns, f)
         
         elif command == "test":
             if model is None:
-                with open("results/model.mdl", "rb") as f:
+                with open("results/model.pt", "rb") as f:
                     model = torch.load(f)
             if ns is None:
-                with open("results/scheduler.pkl", "rb") as f:
+                with open("results/scheduler.pt", "rb") as f:
                     ns = pickle.load(f)
             test(model, ns)
         
