@@ -18,8 +18,7 @@ from src.model import DenoisingDiffusion
 @torch.no_grad()
 def generate(model: torch.nn.Module, ns: NoiseScheduler):
     image = torch.randn((1, 3, 64, 64), device=defaults.device)
-
-    t = 0
+    t = ns.steps - 1
     
     beta = ns.schedule[t]
     alphas_ = ns.sqrt_alphas_[t]
