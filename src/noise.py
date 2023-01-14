@@ -1,3 +1,4 @@
+import json
 import torch
 from torch import Tensor
 from torch.nn import functional as F
@@ -28,28 +29,26 @@ class NoiseScheduler:
         self.steps = steps
         self.start = start
         self.end = end
-        self.device = device
 
         if ntype == 'linear':
-            self.schedule = linear(steps, start, end).to(self.device)
+            self.schedule = linear(steps, start, end).to(device)
         elif ntype == 'cosine':
-            self.schedule = cosine(steps, start, end).to(self.device)
+            self.schedule = cosine(steps, start, end).to(device)
         elif ntype == 'exponential':
-            self.schedule = expont(steps, start, end).to(self.device)
+            self.schedule = expont(steps, start, end).to(device)
         else:
             raise ValueError('Unknown noise schedule type')
         
-        alphas = (1 - self.schedule).to(self.device)
-        alphcp = torch.cumprod(alphas, axis=0).to(self.device)
-        alphcp_shift = F.pad(alphcp[:-1], (1,0), value=1.0).to(self.device)
+        alphas = (1. - self.schedule).to(device)
+        alphcp = torch.cumprod(alphas, axis=0).to(device)
+        alphcp_shift = F.pad(alphcp[:-1], (1,0), value=1.0).to(device)
 
-        self.sqrt_alpha_rp = torch.sqrt(1. / alphas).to(self.device)
+        self.sqrt_alpha_rp = torch.sqrt(1. / alphas).to(device)
 
-        self.sqrt_alphas = torch.sqrt(alphcp).to(self.device)
-        self.sqrt_alphas_ = torch.sqrt(1 - alphcp).to(self.device)
+        self.sqrt_alphas = torch.sqrt(alphcp).to(device)
+        self.sqrt_alphas_ = torch.sqrt(1. - alphcp).to(device)
         
         self.posterior_variance = self.schedule * (1. - alphcp_shift) / (1. - alphcp)
-        self.posterior_variance = self.posterior_variance.to(self.device)
 
     def forward_diffusion(self, input_: Tensor, timestep: int) -> Tensor:
         noise = torch.rand_like(input_)
@@ -58,4 +57,19 @@ class NoiseScheduler:
         sqrta_t_ = self.sqrt_alphas_[timestep]
 
         diff = (sqrta_t * input_) + (sqrta_t_ * noise) 
-        return diff.to(self.device), noise.to(self.device)
+        return diff, noise
+
+    def save(self, path: str):
+        with open(path, 'w') as f:
+            json.dump({
+                "ntype": self.schedule, 
+                "steps": self.timesteps, 
+                "start": self.start,
+                "end": self.end
+            }, f)
+    
+    @classmethod
+    def load(cls, path: str, device = 'cpu'):
+        with open(path, 'r') as f:
+            JSON = json.load(f)
+        return cls(**JSON, device=device)

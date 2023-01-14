@@ -1,4 +1,5 @@
 #!python
+import json
 import torch
 import logging
 # import coloredlogs
@@ -17,22 +18,24 @@ from src.noise import NoiseScheduler
 from src.model import DenoisingDiffusion
 
 
+@torch.no_grad()
 def generate(model: torch.nn.Module, ns: NoiseScheduler):
     image = torch.randn((1, 3, 64, 64), device=defaults.device)
 
-    for t in range(ns.steps)[::-1]:
-        beta = ns.schedule[t]
-        alphas_ = ns.sqrt_alphas_[t]
-        alphas_rp = ns.sqrt_alpha_rp[t]
-        
-        # Call model (noise - prediction)
-        step = torch.tensor([t]).to(defaults.device)
-        pred = (beta * model(image, step) / alphas_)
-        generated = alphas_rp * (image - pred)
-        
-        if t > 0:
-            noise = torch.randn_like(image)
-            generated += torch.sqrt(ns.posterior_variance[t]) * noise 
+    t = 0
+    
+    beta = ns.schedule[t]
+    alphas_ = ns.sqrt_alphas_[t]
+    alphas_rp = ns.sqrt_alpha_rp[t]
+    
+    # Call model (noise - prediction)
+    step = torch.tensor([t]).to(defaults.device)
+    pred = (beta * model(image, step) / alphas_)
+    generated = alphas_rp * (image - pred)
+    
+    if t > 0:
+        noise = torch.randn_like(image)
+        generated += torch.sqrt(ns.posterior_variance[t]) * noise 
     
     return generated.squeeze()
 
@@ -76,7 +79,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         for batch in tqdm(dl):
             optim.zero_grad()
 
-            timestep = torch.randint(0, ns.steps, (1,)).long().to(defaults.device)
+            timestep = torch.randint(0, ns.steps, (1,), device=defaults.device).long()
             image, noise = ns.forward_diffusion(batch, timestep)
             noise_ = model(image, timestep)
             
@@ -88,6 +91,10 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
             if defaults.dryrun: 
                 break
+
+        plt.figure(figsize=(12,4), dpi=150)
+        plt.semilogy(losslog)
+        plt.savefig("results/training/losslog.png")
 
     __end = time()
     info(f"Training time {round((__end - __start)/60, 3)} minutes.")
@@ -125,21 +132,22 @@ if __name__ == "__main__":
     for command in actions:
         if command == "train":
             model, ns, losslog = train()
-            plt.figure(figsize=(12,4), dpi=150)
-            plt.plot(losslog)
-            plt.savefig("results/training/losslog.png")
-            with open("results/model.pt", "wb") as f:
-                torch.save(model, f)
-            with open("results/scheduler.pt", "wb") as f:
-                pickle.dump(ns, f)
+            torch.save(model, "results/model.pt")
+            ns.save("results/scheduler.json")
         
         elif command == "test":
             if model is None:
-                with open("results/model.pt", "rb") as f:
-                    model = torch.load(f)
+                model = torch.load("results/model.pt", map_location=defaults.device)
             if ns is None:
-                with open("results/scheduler.pt", "rb") as f:
-                    ns = pickle.load(f)
+                try:
+                    ns = NoiseScheduler.load("results/scheduler.json", device=defaults.device)
+                except:
+                    ns = NoiseScheduler(
+                        ntype=defaults.schedule, 
+                        steps=defaults.timesteps, 
+                        start=defaults.start,
+                        end=defaults.end,
+                        device=defaults.device)
             test(model, ns)
         
         else:
