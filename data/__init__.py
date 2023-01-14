@@ -33,7 +33,7 @@ class ImageDataset(Dataset):
                 if denorm:
                     img = (img + 1.) / 2.
                     img = clamp(img, 0.0, 1.0)
-                ax.imshow(img)
+                ax.imshow(img.cpu())
                 ax.set_axis_off()
             
             fig.tight_layout(pad=2.0)

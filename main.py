@@ -1,7 +1,7 @@
 #!python
 import torch
 import logging
-import coloredlogs
+# import coloredlogs
 import pickle
 from sys import argv
 from time import time
@@ -25,7 +25,8 @@ def generate(model: torch.nn.Module, ns: NoiseScheduler):
         alphas_rp = ns.sqrt_alpha_rp[t]
         
         # Call model (noise - prediction)
-        pred = (beta * model(image, torch.tensor([t])) / alphas_)
+        step = torch.tensor([t]).to(defaults.device)
+        pred = (beta * model(image, step) / alphas_)
         generated = alphas_rp * (image - pred)
         
         if t > 0:
@@ -50,10 +51,11 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         ntype=defaults.schedule, 
         steps=defaults.timesteps, 
         start=defaults.start,
-        end=defaults.end)
+        end=defaults.end,
+        device=defaults.device)
 
     # Build model
-    model = DenoisingDiffusion(defaults.shape)
+    model = DenoisingDiffusion(defaults.shape, defaults.device)
     param_size = sum([p.numel() for p in model.parameters()])
     info(f"DenoisingDiffusion Model :: {param_size} parameters")
 
@@ -72,7 +74,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         for batch in tqdm(dl):
             optim.zero_grad()
 
-            timestep = torch.randint(0, ns.steps, (1,)).long()
+            timestep = torch.randint(0, ns.steps, (1,)).long().to(defaults.device)
             image, noise = ns.forward_diffusion(batch, timestep)
             noise_ = model(image, timestep)
             
@@ -85,7 +87,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
                 break
 
     __end = time()
-    info(f"Training time {round((__end - __start)/(1e3 * 60), 3)} minutes.")
+    info(f"Training time {round((__end - __start)/60, 3)} minutes.")
 
     return model, ns
 
@@ -98,7 +100,7 @@ def test(model: torch.nn.Module, ns: NoiseScheduler):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    coloredlogs.install(level=logging.INFO, logger=logging.getLogger())
+    # coloredlogs.install(level=logging.INFO, logger=logging.getLogger())
 
     # Rudimentary argument parser for command line arguments.
     # Lets us have otherwise complicated behaviour, like chaining commands.

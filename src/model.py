@@ -48,15 +48,16 @@ class DenoisingBlock(nn.Module):
 
 
 class SinusoidalPositionEmbeddings(nn.Module):
-    def __init__(self, dim):
+    def __init__(self, dim, device = 'cpu'):
         super().__init__()
         self.dim = dim
+        self.device = device
 
     def forward(self, time):
         half_dim = self.dim // 2
         
         embeddings = math.log(10000) / (half_dim - 1)
-        embeddings = torch.exp(torch.arange(half_dim) * -embeddings)
+        embeddings = torch.exp(torch.arange(half_dim) * -embeddings).to(self.device)
 
         embeddings = time[:, None] * embeddings[None, :]
         embeddings = torch.cat((embeddings.sin(), embeddings.cos()), dim=-1)
@@ -68,7 +69,7 @@ class DenoisingDiffusion(nn.Module):
     time_emb_dim = 32
     image_channels = 3
 
-    def __init__(self, shape: tuple) -> None:
+    def __init__(self, shape: tuple, device = 'cpu') -> None:
         super().__init__()
         info("Initialize Model")
 
@@ -76,7 +77,7 @@ class DenoisingDiffusion(nn.Module):
         
         # Time embedding
         self.time_mlp = nn.Sequential(
-                SinusoidalPositionEmbeddings(self.time_emb_dim),
+                SinusoidalPositionEmbeddings(self.time_emb_dim, device),
                 nn.Linear(self.time_emb_dim, self.time_emb_dim),
                 nn.ReLU()
             )

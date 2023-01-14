@@ -31,24 +31,25 @@ class NoiseScheduler:
         self.device = device
 
         if ntype == 'linear':
-            self.schedule = linear(steps, start, end)
+            self.schedule = linear(steps, start, end).to(self.device)
         elif ntype == 'cosine':
-            self.schedule = cosine(steps, start, end)
+            self.schedule = cosine(steps, start, end).to(self.device)
         elif ntype == 'exponential':
-            self.schedule = expont(steps, start, end)
+            self.schedule = expont(steps, start, end).to(self.device)
         else:
             raise ValueError('Unknown noise schedule type')
         
-        alphas = 1 - self.schedule
-        alphcp = torch.cumprod(alphas, axis=0)
-        alphcp_shift = F.pad(alphcp[:-1], (1,0), value=1.0)
+        alphas = (1 - self.schedule).to(self.device)
+        alphcp = torch.cumprod(alphas, axis=0).to(self.device)
+        alphcp_shift = F.pad(alphcp[:-1], (1,0), value=1.0).to(self.device)
 
-        self.sqrt_alpha_rp = torch.sqrt(1. / alphas)
+        self.sqrt_alpha_rp = torch.sqrt(1. / alphas).to(self.device)
 
-        self.sqrt_alphas = torch.sqrt(alphcp)
-        self.sqrt_alphas_ = torch.sqrt(1 - alphcp)
+        self.sqrt_alphas = torch.sqrt(alphcp).to(self.device)
+        self.sqrt_alphas_ = torch.sqrt(1 - alphcp).to(self.device)
         
         self.posterior_variance = self.schedule * (1. - alphcp_shift) / (1. - alphcp)
+        self.posterior_variance = self.posterior_variance.to(self.device)
 
     def forward_diffusion(self, input_: Tensor, timestep: int) -> Tensor:
         noise = torch.rand_like(input_)
