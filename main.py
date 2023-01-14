@@ -9,6 +9,7 @@ from tqdm import tqdm
 from typing import Tuple
 from logging import info
 from torch.nn import functional as F
+from matplotlib import pyplot as plt
 
 from data import ImageDataset, FacesDataset, CarsDataset
 from src.config import defaults, makeconfig, print_help
@@ -66,8 +67,9 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
     optim = torch.optim.Adam(model.parameters(), lr=defaults.lr)
 
     __start = time()
+    losslog = list()
     for E in range(defaults.epochs):
-        print(f"Epoch {E}/{defaults.epochs}")
+        print(f"Epoch {E}/{defaults.epochs}", f"Epoch Loss {losslog[-1]}" if losslog else "")
         ImageDataset.plot([ generate(model, ns) for _ in range(8) ], 
             save=f"results/training/epoch_{E}.png")
 
@@ -82,6 +84,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
             loss.backward()
             optim.step()
+            losslog.append(loss.cpu().detach().item())
 
             if defaults.dryrun: 
                 break
@@ -89,7 +92,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
     __end = time()
     info(f"Training time {round((__end - __start)/60, 3)} minutes.")
 
-    return model, ns
+    return model, ns, losslog
 
 
 def test(model: torch.nn.Module, ns: NoiseScheduler):
@@ -121,7 +124,9 @@ if __name__ == "__main__":
     ns = None
     for command in actions:
         if command == "train":
-            model, ns = train()
+            model, ns, losslog = train()
+            plt.plot(losslog, figsize=(12,4), dpi=150)
+            plt.savefig("results/training/losslog.png")
             with open("results/model.pt", "wb") as f:
                 torch.save(model, f)
             with open("results/scheduler.pt", "wb") as f:
