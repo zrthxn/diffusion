@@ -1,9 +1,6 @@
 #!python
-import json
 import torch
 import logging
-# import coloredlogs
-import pickle
 from sys import argv
 from time import time
 from tqdm import tqdm
@@ -110,7 +107,6 @@ def test(model: torch.nn.Module, ns: NoiseScheduler):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    # coloredlogs.install(level=logging.INFO, logger=logging.getLogger())
 
     # Rudimentary argument parser for command line arguments.
     # Lets us have otherwise complicated behaviour, like chaining commands.
