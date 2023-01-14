@@ -125,7 +125,8 @@ if __name__ == "__main__":
     for command in actions:
         if command == "train":
             model, ns, losslog = train()
-            plt.plot(losslog, figsize=(12,4), dpi=150)
+            plt.figure(figsize=(12,4), dpi=150)
+            plt.plot(losslog)
             plt.savefig("results/training/losslog.png")
             with open("results/model.pt", "wb") as f:
                 torch.save(model, f)
