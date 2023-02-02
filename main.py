@@ -85,12 +85,12 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
             optim.step()
             losslog.append(loss.cpu().detach().item())
 
+            plt.figure(figsize=(12,4), dpi=150)
+            plt.semilogy(losslog)
+            plt.savefig("results/training/losslog.png")
+
             if defaults.dryrun: 
                 break
-
-        plt.figure(figsize=(12,4), dpi=150)
-        plt.semilogy(losslog)
-        plt.savefig("results/training/losslog.png")
 
     __end = time()
     info(f"Training time {round((__end - __start)/60, 3)} minutes.")
