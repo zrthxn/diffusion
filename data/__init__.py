@@ -41,6 +41,7 @@ class ImageDataset(Dataset):
                 plt.show()
             else:
                 plt.savefig(save)
+            plt.close()
 
     def head(self):
         self.plot(self.images[:5])

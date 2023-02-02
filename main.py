@@ -88,6 +88,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
             plt.figure(figsize=(12,4), dpi=150)
             plt.semilogy(losslog)
             plt.savefig("results/training/losslog.png")
+            plt.close()
 
             if defaults.dryrun: 
                 break
