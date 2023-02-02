@@ -27,7 +27,8 @@ class FacesDataset(ImageDataset):
                 if norm:
                     im = ((im / 255.) * 2.) - 1.
                 self.images.append(im)
-            except:
+            except Exception as e:
+                print(e)
                 continue
 
         info(f"Read {len(self.images)} face images")
