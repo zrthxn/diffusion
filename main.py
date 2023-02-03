@@ -18,22 +18,22 @@ from src.model import DenoisingDiffusion
 @torch.no_grad()
 def generate(model: torch.nn.Module, ns: NoiseScheduler):
     image = torch.randn((1, 3, 64, 64), device=defaults.device)
-    t = ns.steps - 1
-    
-    beta = ns.schedule[t]
-    alphas_ = ns.oneminus_sqrt_alphacp[t]
-    alphas_rp = ns.sqrt_alpha_rp[t]
-    
-    # Call model (noise - prediction)
-    step = torch.tensor([t]).to(defaults.device)
-    noise_ = (beta / alphas_) * model(image, step)
-    generated = alphas_rp * (image - noise_)
 
-    if t > 0:
-        sampled_noise = torch.randn_like(image)
-        generated += torch.sqrt(ns.posterior_variance[t]) * sampled_noise
+    for t in range(ns.steps):
+        beta = ns.schedule[t]
+        alphas_ = ns.oneminus_sqrt_alphacp[t]
+        alphas_rp = ns.sqrt_alpha_rp[t]
+        
+        # Call model (noise - prediction)
+        step = torch.tensor([t]).to(defaults.device)
+        noise_ = (beta / alphas_) * model(image, step)
+        image = alphas_rp * (image - noise_)
+
+        if t > 0:
+            sampled_noise = torch.randn_like(image)
+            image += torch.sqrt(ns.posterior_variance[t]) * sampled_noise
     
-    return generated.squeeze()
+    return image.squeeze()
 
 
 def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
