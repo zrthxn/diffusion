@@ -37,7 +37,7 @@ def makeconfig(argv: list):
 
 def print_help():
     nspaces = lambda n: ''.join([' ' for _ in range(n)])
-    M = max(map(len, list(defaults.keys()))) + 4
+    M = max(map(len, list(defaults.keys))) + 4
     options = '\n'.join([f"\t{k}{nspaces(M-len(k))}{v}" for k, v in defaults.keys.items()][:-1])
     print(f"""
     Usage:
