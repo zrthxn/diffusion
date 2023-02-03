@@ -21,17 +21,17 @@ def generate(model: torch.nn.Module, ns: NoiseScheduler):
     t = ns.steps - 1
     
     beta = ns.schedule[t]
-    alphas_ = ns.sqrt_alphas_[t]
+    alphas_ = ns.oneminus_sqrt_alphacp[t]
     alphas_rp = ns.sqrt_alpha_rp[t]
     
     # Call model (noise - prediction)
     step = torch.tensor([t]).to(defaults.device)
-    pred = (beta * model(image, step) / alphas_)
-    generated = alphas_rp * (image - pred)
-    
+    noise_ = (beta / alphas_) * model(image, step)
+    generated = alphas_rp * (image - noise_)
+
     if t > 0:
-        noise = torch.randn_like(image)
-        generated += torch.sqrt(ns.posterior_variance[t]) * noise 
+        sampled_noise = torch.randn_like(image)
+        generated += torch.sqrt(ns.posterior_variance[t]) * sampled_noise
     
     return generated.squeeze()
 
