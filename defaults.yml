@@ -7,8 +7,8 @@ dryrun: False
 
 # Noise Scheduler parameters
 schedule: "linear" 
-timesteps: 1000
-start: 0.001
+timesteps: 300
+start: 0.0001
 end: 0.020
 
 # Model shape
