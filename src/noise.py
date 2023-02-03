@@ -62,8 +62,8 @@ class NoiseScheduler:
     def save(self, path: str):
         with open(path, 'w') as f:
             json.dump({
-                "ntype": self.schedule, 
-                "steps": self.timesteps, 
+                "ntype": self.ntype, 
+                "steps": self.steps, 
                 "start": self.start,
                 "end": self.end
             }, f)

@@ -1,5 +1,5 @@
 from os import path, listdir
-from torchvision.io import read_image
+from torchvision.io import read_image, ImageReadMode
 from logging import info
 
 from . import ImageDataset
@@ -22,7 +22,7 @@ class FacesDataset(ImageDataset):
 
         for f in paths:
             try:
-                im = read_image(f).to(defaults.device)
+                im = read_image(f, mode=ImageReadMode.RGB).to(defaults.device)
                 #.permute(1, 2, 0)
                 if norm:
                     im = ((im / 255.) * 2.) - 1.

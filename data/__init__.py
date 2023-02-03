@@ -1,3 +1,4 @@
+import numpy as np
 from logging import info
 from typing import List
 from matplotlib import pyplot as plt
@@ -29,11 +30,11 @@ class ImageDataset(Dataset):
             fig.set_dpi(240)
             axes: List[plt.Axes] = ax.flatten()
             for img, ax in zip(images, axes):
-                img = img.detach().permute(1, 2, 0)
+                im = img.detach().permute(1, 2, 0).cpu().numpy()
                 if denorm:
-                    img = (img + 1.) / 2.
-                    img = clamp(img, 0.0, 1.0)
-                ax.imshow(img.cpu())
+                    im = (im + 1.) / 2.
+                    im = np.clip(im, 0, 1)
+                ax.imshow(im)
                 ax.set_axis_off()
             
             fig.tight_layout(pad=2.0)

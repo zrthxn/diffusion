@@ -69,11 +69,12 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
     losslog = list()
     for E in range(defaults.epochs):
         print(f"Epoch {E}/{defaults.epochs}", f"Epoch Loss {losslog[-1]}" if losslog else "")
-        ImageDataset.plot([ generate(model, ns) for _ in range(8) ], 
-            save=f"results/training/epoch_{E}.png")
 
         for batch in tqdm(dl):
             optim.zero_grad()
+
+            ImageDataset.plot(batch)
+            break
 
             timestep = torch.randint(0, ns.steps, (1,), device=defaults.device).long()
             image, noise = ns.forward_diffusion(batch, timestep)
@@ -92,6 +93,9 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
             if defaults.dryrun: 
                 break
+        
+        ImageDataset.plot([ generate(model, ns) for _ in range(8) ], 
+            save=f"results/training/epoch_{E}.png")
 
     __end = time()
     info(f"Training time {round((__end - __start)/60, 3)} minutes.")
