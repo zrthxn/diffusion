@@ -8,34 +8,12 @@ from typing import Tuple
 from logging import info
 from torch.nn import functional as F
 from matplotlib import pyplot as plt
+from random import randint
 
 from data import ImageDataset, FacesDataset, CarsDataset
 from src.config import defaults, makeconfig, print_help
 from src.noise import NoiseScheduler
 from src.model import DenoisingDiffusion
-
-
-@torch.no_grad()
-def generate(model: torch.nn.Module, ns: NoiseScheduler):
-    image = torch.randn((1, 3, 64, 64), device=defaults.device)
-
-    for t in range(ns.steps)[::-1]:
-        beta = ns.schedule[t]
-        alphas_ = ns.oneminus_sqrt_alphacp[t]
-        alphas_rp = ns.sqrt_alpha_rp[t]
-        
-        # Call model (noise - prediction)
-        step = torch.tensor([t]).to(defaults.device)
-        noise_ = (beta / alphas_) * model(image, step)
-        image_ = alphas_rp * (image - noise_)
-
-        if t > 0:
-            sampled_noise = torch.randn_like(image)
-            image = image_ + torch.sqrt(ns.posterior_variance[t]) * sampled_noise
-        else:
-            image = image_
-    
-    return image.squeeze()
 
 
 def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
@@ -57,7 +35,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         device=defaults.device)
 
     # Build model
-    model = DenoisingDiffusion(defaults.shape, defaults.device)
+    model = DenoisingDiffusion(defaults.shape)
     param_size = sum([p.numel() for p in model.parameters()])
     info(f"DenoisingDiffusion Model :: {param_size} parameters")
 
@@ -65,7 +43,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         print(repr(model))
 
     model.to(defaults.device)
-    optim = torch.optim.Adam(model.parameters(), lr=defaults.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=defaults.lr)
 
     __start = time()
     losslog = list()
@@ -73,27 +51,27 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         print(f"Epoch {E}/{defaults.epochs}", f"Epoch Loss {losslog[-1]}" if losslog else "")
 
         for batch in tqdm(dl):
-            optim.zero_grad()
+            optimizer.zero_grad()
 
-            timestep = torch.randint(0, ns.steps, (1,), device=defaults.device).long()
+            timestep = randint(0, ns.steps)
             image, noise = ns.forward_diffusion(batch, timestep)
-            noise_ = model(image, timestep)
+            noise_ = model(image, torch.Tensor([timestep], device=defaults.device))
             
             loss = F.l1_loss(noise_, noise)
-
             loss.backward()
-            optim.step()
-            losslog.append(loss.cpu().detach().item())
-
-            plt.figure(figsize=(12,4), dpi=150)
-            plt.semilogy(losslog)
-            plt.savefig("results/training/losslog.png")
-            plt.close()
+            optimizer.step()
+            
+            losslog.append(loss.detach().cpu().item())
 
             if defaults.dryrun: 
                 break
+
+        plt.figure(figsize=(12,4), dpi=150)
+        plt.semilogy(losslog)
+        plt.savefig("results/training/losslog.png")
+        plt.close()
         
-        ImageDataset.plot([ generate(model, ns) for _ in range(8) ], 
+        ImageDataset.plot([ ns.sample(model) for _ in range(8) ], 
             save=f"results/training/epoch_{E}.png")
 
     __end = time()
@@ -104,7 +82,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
 def test(model: torch.nn.Module, ns: NoiseScheduler):
     info("Start Testing")
-    ImageDataset.plot([ generate(model, ns) for _ in range(16) ], 
+    ImageDataset.plot([ ns.sample(model) for _ in range(16) ], 
         save=f"results/generated.png")
 
 

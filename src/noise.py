@@ -58,6 +58,28 @@ class NoiseScheduler:
 
         diff = (sqrta_t * input_) + (sqrta_t_ * noise) 
         return diff, noise
+    
+    @torch.no_grad()
+    def sample(self, model):
+        image = torch.randn((1, 3, 64, 64), device=model.device)
+
+        for t in range(self.steps)[::-1]:
+            beta = self.schedule[t]
+            alphas_ = self.oneminus_sqrt_alphacp[t]
+            alphas_rp = self.sqrt_alpha_rp[t]
+            
+            # Call model (noise - prediction)
+            step = torch.tensor([t], device=model.device)
+            noise_ = (beta / alphas_) * model(image, step)
+            image_ = alphas_rp * (image - noise_)
+
+            if t > 0:
+                sampled_noise = torch.randn_like(image)
+                image = image_ + torch.sqrt(self.posterior_variance[t]) * sampled_noise
+            else:
+                image = image_
+
+        return image.squeeze()
 
     def save(self, path: str):
         with open(path, 'w') as f:

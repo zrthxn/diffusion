@@ -29,7 +29,7 @@ class DenoisingBlock(nn.Module):
         
     def forward(self, x, t, ):
         # First Conv
-        x = self.in_bnorm(F.relu(self.in_conv(x)))
+        h = self.in_bnorm(F.relu(self.in_conv(x)))
 
         # Time embedding
         time_emb = F.relu(self.time(t))
@@ -38,26 +38,25 @@ class DenoisingBlock(nn.Module):
         time_emb = time_emb[(..., ) + (None, ) * 2]
         
         # Add time channel
-        x = x + time_emb
+        h = h + time_emb
         
         # Second Conv
-        x = self.out_bnorm(F.relu(self.out_conv(x)))
+        h = self.out_bnorm(F.relu(self.out_conv(h)))
         
         # Down or Upsample
-        return self.transform(x)
+        return self.transform(h)
 
 
 class SinusoidalPositionEmbeddings(nn.Module):
-    def __init__(self, dim, device = 'cpu'):
+    def __init__(self, dim):
         super().__init__()
         self.dim = dim
-        self.device = device
 
     def forward(self, time):
         half_dim = self.dim // 2
         
         embeddings = math.log(10000) / (half_dim - 1)
-        embeddings = torch.exp(torch.arange(half_dim) * -embeddings).to(self.device)
+        embeddings = torch.exp(torch.arange(half_dim) * -embeddings).to(time.device)
 
         embeddings = time[:, None] * embeddings[None, :]
         embeddings = torch.cat((embeddings.sin(), embeddings.cos()), dim=-1)
@@ -69,7 +68,7 @@ class DenoisingDiffusion(nn.Module):
     time_emb_dim = 32
     image_channels = 3
 
-    def __init__(self, shape: tuple, device = 'cpu') -> None:
+    def __init__(self, shape: tuple) -> None:
         super().__init__()
         info("Initialize Model")
 
@@ -77,7 +76,7 @@ class DenoisingDiffusion(nn.Module):
         
         # Time embedding
         self.time_mlp = nn.Sequential(
-                SinusoidalPositionEmbeddings(self.time_emb_dim, device),
+                SinusoidalPositionEmbeddings(self.time_emb_dim),
                 nn.Linear(self.time_emb_dim, self.time_emb_dim),
                 nn.ReLU()
             )
