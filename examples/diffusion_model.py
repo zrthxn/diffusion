@@ -1,3 +1,4 @@
+#%%
 # -*- coding: utf-8 -*-
 """diffusion_model.ipynb
 
@@ -25,18 +26,71 @@ import torch
 import torchvision
 import matplotlib.pyplot as plt
 
-def show_images(datset, num_samples=20, cols=4):
+from torch.utils.data import DataLoader
+from os import path, listdir
+from torchvision.io import read_image, ImageReadMode
+from logging import info
+
+IMG_SIZE = 64
+BATCH_SIZE = 128
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+def load_stanfordcars_dataset() -> DataLoader:
+    data_transforms = [
+        transforms.Resize((IMG_SIZE, IMG_SIZE)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(), # Scales data into [0,1] 
+        transforms.Lambda(lambda t: (t * 2) - 1) # Scale between [-1, 1] 
+    ]
+    data_transform = transforms.Compose(data_transforms)
+
+    train = torchvision.datasets.StanfordCars(root=".", download=True, 
+                                         transform=data_transform)
+
+    test = torchvision.datasets.StanfordCars(root=".", download=True, 
+                                         transform=data_transform, split='test')
+    
+    ds = torch.utils.data.ConcatDataset([train, test])
+    return DataLoader(ds, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
+
+def load_kagglefaces_dataset():
+
+    loadpath = 'data/faces'
+    paths = list()
+    images = list()
+
+    for subdir in ['smile', 'non_smile', 'test']:
+        for f in listdir(path.join(loadpath, subdir)):
+            if f.endswith('jpg'): 
+                paths.append(path.join(loadpath, subdir, f))
+
+    for f in paths:
+        try:
+            im = read_image(f, mode=ImageReadMode.RGB).to(device)
+            im = ((im / 255.) * 2.) - 1.
+            images.append(im)
+        except Exception as e:
+            print(e)
+            continue
+
+        info(f"Read {len(images)} face images")
+
+    return DataLoader(images, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
+
+
+def show_images(data, num_samples=20, cols=4):
     """ Plots some samples from the dataset """
     plt.figure(figsize=(15,15)) 
     for i, img in enumerate(data):
         if i == num_samples:
             break
-        plt.subplot(num_samples/cols + 1, cols, i + 1)
-        plt.imshow(img[0])
+        plt.subplot(int(num_samples/cols + 1), cols, i + 1)
+        plt.imshow(img[0].permute(1,2,0))
 
-data = torchvision.datasets.StanfordCars(root=".", download=True)
+# data = torchvision.datasets.StanfordCars(root=".", download=True)
+data = load_kagglefaces_dataset()
 show_images(data)
-
+#%%
 """Later in this notebook we will do some additional modifications to this dataset, for example make the images smaller, convert them to tensors ect.
 
 # Building the Diffusion Model
@@ -93,31 +147,13 @@ sqrt_alpha_rp = torch.sqrt(1.0 / alphas)
 sqrt_alphas = torch.sqrt(alphcp)
 sqrt_alphas_ = torch.sqrt(1. - alphcp)
 posterior_variance = schedule * (1. - alphcp_shift) / (1. - alphcp)
-
+#%%
 """Let's test it on our dataset ..."""
 
 from torchvision import transforms 
 from torch.utils.data import DataLoader
 import numpy as np
 
-IMG_SIZE = 64
-BATCH_SIZE = 128
-
-def load_transformed_dataset():
-    data_transforms = [
-        transforms.Resize((IMG_SIZE, IMG_SIZE)),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(), # Scales data into [0,1] 
-        transforms.Lambda(lambda t: (t * 2) - 1) # Scale between [-1, 1] 
-    ]
-    data_transform = transforms.Compose(data_transforms)
-
-    train = torchvision.datasets.StanfordCars(root=".", download=True, 
-                                         transform=data_transform)
-
-    test = torchvision.datasets.StanfordCars(root=".", download=True, 
-                                         transform=data_transform, split='test')
-    return torch.utils.data.ConcatDataset([train, test])
 def show_tensor_image(image):
     reverse_transforms = transforms.Compose([
         transforms.Lambda(lambda t: (t + 1) / 2),
@@ -132,8 +168,7 @@ def show_tensor_image(image):
         image = image[0, :, :, :] 
     plt.imshow(reverse_transforms(image))
 
-data = load_transformed_dataset()
-dataloader = DataLoader(data, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
+dataloader = load_kagglefaces_dataset()
 
 # Simulate forward diffusion
 image = next(iter(dataloader))[0]
@@ -145,10 +180,10 @@ stepsize = int(T/num_images)
 
 for idx in range(0, T, stepsize):
     t = torch.Tensor([idx]).type(torch.int64)
-    plt.subplot(1, num_images+1, (idx/stepsize) + 1)
+    plt.subplot(1, int(num_images+1), int((idx/stepsize) + 1))
     image, noise = forward_diffusion_sample(image, t)
     show_tensor_image(image)
-
+#%%
 """## Step 2: The backward process = U-Net
 
 For a great introduction to UNets, have a look at this post: https://amaarora.github.io/2020/09/13/unet.html.
@@ -261,7 +296,7 @@ class SimpleUnet(nn.Module):
             x = torch.cat((x, residual_x), dim=1)           
             x = up(x, t)
         return self.output(x)
-
+#%%
 model = SimpleUnet()
 print("Num params: ", sum(p.numel() for p in model.parameters()))
 model
@@ -318,7 +353,7 @@ def sample_plot_image(num_checkpoints = 10):
             img = mean
 
         if i % stepsize == 0:
-            plt.subplot(1, num_checkpoints, i/stepsize+1)
+            plt.subplot(1, num_checkpoints, int(i/stepsize+1))
             show_tensor_image(img.detach().cpu())
     plt.show()
 
@@ -326,7 +361,6 @@ def sample_plot_image(num_checkpoints = 10):
 
 from torch.optim import Adam
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)
 optimizer = Adam(model.parameters(), lr=0.001)
 epochs = 100 # Try more!
@@ -336,7 +370,7 @@ for epoch in range(epochs):
       optimizer.zero_grad()
 
       t = torch.randint(0, T, (BATCH_SIZE,), device=device).long()
-      x_noisy, noise = forward_diffusion_sample(batch[0], t, device)
+      x_noisy, noise = forward_diffusion_sample(batch, t, device)
       noise_pred = model(x_noisy, t)
 
       loss = F.l1_loss(noise, noise_pred)
@@ -361,4 +395,3 @@ iffusion models scale down the data with each forward process step (by a √
 so that variance does not grow when adding noise, thus providing consistently scaled inputs
 to the neural net reverse process. NCSN omits this scaling factor.
 """
-

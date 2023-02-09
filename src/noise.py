@@ -4,10 +4,11 @@ from torch import Tensor
 from torch.nn import functional as F
 from logging import info
 
+from .model import DenoisingDiffusion
 
-linear = lambda steps, start, end: torch.linspace(start, end, steps)
-cosine = lambda steps, start, end: torch.sin(linear(steps, start, end))
-expont = lambda steps, start, end: torch.exp(linear(steps, start, end))
+linear = lambda start, end, steps: torch.linspace(start, end, steps)
+cosine = lambda start, end, steps: torch.sin(linear(start, end, steps))
+expont = lambda start, end, steps: torch.exp(linear(start, end, steps))
 
 
 class NoiseScheduler:
@@ -31,11 +32,11 @@ class NoiseScheduler:
         self.end = end
 
         if ntype == 'linear':
-            self.schedule = linear(steps, start, end).to(device)
+            self.schedule = linear(start, end, steps).to(device)
         elif ntype == 'cosine':
-            self.schedule = cosine(steps, start, end).to(device)
+            self.schedule = cosine(start, end, steps).to(device)
         elif ntype == 'exponential':
-            self.schedule = expont(steps, start, end).to(device)
+            self.schedule = expont(start, end, steps).to(device)
         else:
             raise ValueError('Unknown noise schedule type')
         
@@ -60,7 +61,7 @@ class NoiseScheduler:
         return diff, noise
     
     @torch.no_grad()
-    def sample(self, model):
+    def sample(self, model: DenoisingDiffusion):
         image = torch.randn((1, 3, 64, 64), device=model.device)
 
         for t in range(self.steps)[::-1]:

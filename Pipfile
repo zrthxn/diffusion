@@ -11,8 +11,6 @@ coloredlogs = "*"
 tqdm = "*"
 pyyaml = "*"
 scipy = "*"
-
-[dev-packages]
 ipykernel = "*"
 
 [requires]
