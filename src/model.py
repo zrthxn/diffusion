@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from logging import info
-
+from noise import NoiseScheduler
 
 class DenoisingBlock(nn.Module):
     def __init__(self, 
@@ -123,3 +123,25 @@ class DenoisingDiffusion(nn.Module):
             x = up(x, t)
         
         return self.output(x)
+
+    @torch.no_grad()
+    def sample(self, ns: NoiseScheduler):
+        image = torch.randn((1, 3, 64, 64), device=self.device)
+
+        for t in range(self.steps)[::-1]:
+            beta = ns.schedule[t]
+            alphas_ = ns.oneminus_sqrt_alphacp[t]
+            alphas_rp = ns.sqrt_alpha_rp[t]
+            
+            # Call model (noise - prediction)
+            step = torch.tensor([t], device=self.device)
+            noise_ = (beta / alphas_) * self(image, step)
+            image_ = alphas_rp * (image - noise_)
+
+            if t > 0:
+                sampled_noise = torch.randn_like(image)
+                image = image_ + torch.sqrt(ns.posterior_variance[t]) * sampled_noise
+            else:
+                image = image_
+
+        return image.squeeze()

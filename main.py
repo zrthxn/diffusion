@@ -71,7 +71,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         plt.savefig("results/training/losslog.png")
         plt.close()
         
-        ImageDataset.plot([ ns.sample(model) for _ in range(8) ], 
+        ImageDataset.plot([ model.sample(ns) for _ in range(8) ], 
             save=f"results/training/epoch_{E}.png")
 
     __end = time()
@@ -82,7 +82,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
 def test(model: torch.nn.Module, ns: NoiseScheduler):
     info("Start Testing")
-    ImageDataset.plot([ ns.sample(model) for _ in range(16) ], 
+    ImageDataset.plot([ model.sample(ns) for _ in range(16) ], 
         save=f"results/generated.png")
 
 
