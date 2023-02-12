@@ -1,9 +1,8 @@
 import numpy as np
-from logging import info
 from typing import List
 from matplotlib import pyplot as plt
 from torch.utils.data import Dataset, DataLoader
-from torch import Tensor, no_grad, clamp
+from torch import Tensor, no_grad
 
 class ImageDataset(Dataset):
     images = list()
