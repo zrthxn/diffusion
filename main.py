@@ -53,7 +53,10 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         for batch in tqdm(dl):
             optimizer.zero_grad()
 
-            timestep = torch.randint(0, ns.steps, (defaults.batch_size,), device=defaults.device)
+            timestep = torch.randint(0, ns.steps, 
+                size=(defaults.batch_size,), 
+                device=defaults.device)
+            
             image, noise = ns.forward_diffusion(batch, timestep)
             noise_ = model(image, timestep)
             
