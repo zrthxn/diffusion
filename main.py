@@ -48,7 +48,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
     __start = time()
     losslog = list()
-    for E in range(defaults.epochs):
+    for E in range(1, defaults.epochs + 1):
         print(f"Epoch {E}/{defaults.epochs}", f"Epoch Loss {losslog[-1]}" if losslog else "")
         
         dl = ds.loader(defaults.batch_size)
