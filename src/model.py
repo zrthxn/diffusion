@@ -160,20 +160,20 @@ class DenoisingDiffusion(nn.Module):
     def sample(self, ns: NoiseScheduler):
         image = torch.randn((1, 3, 64, 64), device=ns.device)
 
-        for t in range(ns.steps)[::-1]:
+        for i in range(ns.steps)[::-1]:
+            t = torch.full((1,), i, device=ns.device)
+
             beta = ns.schedule[t]
             alphas_ = ns.sqrt_oneminus_alphacp[t]
             alphas_rp = ns.sqrt_alpha_rp[t]
             
             # Call model (noise - prediction)
-            step = torch.tensor([t], device=ns.device)
-            noise_ = (beta / alphas_) * self(image, step)
-            image_ = alphas_rp * (image - noise_)
+            mean = alphas_rp * (image - beta * self(image, t) / alphas_)
 
-            if t > 0:
-                sampled_noise = torch.randn_like(image)
-                image = image_ + torch.sqrt(ns.posterior_variance[t]) * sampled_noise
+            if i > 0:
+                noise = torch.randn_like(image)
+                image = mean + torch.sqrt(ns.posterior_variance[t]) * noise
             else:
-                image = image_
+                image = mean
 
         return image.squeeze()

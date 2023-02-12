@@ -25,8 +25,9 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         ds = CarsDataset()
     else:
         raise ValueError(f"Unknown dataset `{defaults.dataset}`")
+    
+    info(f"Built {len(ds.images) // defaults.batch_size} batches of {defaults.batch_size} samples")
 
-    dl = ds.loader(defaults.batch_size)
     ns = NoiseScheduler(
         ntype=defaults.schedule, 
         steps=defaults.timesteps, 
@@ -49,7 +50,8 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
     losslog = list()
     for E in range(defaults.epochs):
         print(f"Epoch {E}/{defaults.epochs}", f"Epoch Loss {losslog[-1]}" if losslog else "")
-
+        
+        dl = ds.loader(defaults.batch_size)
         for batch in tqdm(dl):
             optimizer.zero_grad()
 
@@ -57,10 +59,10 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
                 size=(defaults.batch_size,), 
                 device=defaults.device)
             
-            image, noise = ns.forward_diffusion(batch, timestep)
-            noise_ = model(image, timestep)
+            image_, noise = ns.forward_diffusion(batch, timestep)
+            noise_ = model(image_, timestep)
             
-            loss = F.l1_loss(noise_, noise)
+            loss = F.l1_loss(noise, noise_)
             loss.backward()
             optimizer.step()
             
@@ -71,7 +73,7 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
         plt.figure(figsize=(12,4), dpi=150)
         plt.semilogy(losslog)
-        plt.savefig("results/training/losslog.png")
+        plt.savefig("results/losslog.png")
         plt.close()
         
         ImageDataset.plot([ model.sample(ns) for _ in range(8) ], 

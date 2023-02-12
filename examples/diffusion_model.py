@@ -336,19 +336,15 @@ def sample_plot_image(num_checkpoints = 10):
         t = torch.full((1,), i, device=device, dtype=torch.long)
         
         betas_t = get_index_from_list(schedule, t, img.shape)
-        sqrt_one_minus_alphas_cumprod_t = get_index_from_list(
-            sqrt_alphas_, t, img.shape
-        )
+        sqrt_one_minus_alphas_cumprod_t = get_index_from_list(sqrt_alphas_, t, img.shape)
         sqrt_recip_alphas_t = get_index_from_list(sqrt_alpha_rp, t, img.shape)
         
         # Call model (current image - noise prediction)
-        mean = sqrt_recip_alphas_t * (
-            img - betas_t * model(img, t) / sqrt_one_minus_alphas_cumprod_t
-        )
-        posterior_variance_t = get_index_from_list(posterior_variance, t, img.shape)
+        mean = sqrt_recip_alphas_t * (img - betas_t * model(img, t) / sqrt_one_minus_alphas_cumprod_t)
         
-        if t != 0:
+        if i != 0:
             noise = torch.randn_like(img)
+            posterior_variance_t = get_index_from_list(posterior_variance, t, img.shape)
             img = mean + torch.sqrt(posterior_variance_t) * noise 
         else:
             img = mean

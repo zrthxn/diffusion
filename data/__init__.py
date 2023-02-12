@@ -51,7 +51,6 @@ class ImageDataset(Dataset):
         self.plot(self.images[-5:])
 
     def loader(self, batch_size: int) -> DataLoader:
-        info(f"Building DataLoader with {len(self.images) // batch_size} batches of {batch_size} samples")
         return DataLoader(self, batch_size, shuffle=True, drop_last=True)
 
 from .faces import FacesDataset
