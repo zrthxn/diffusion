@@ -53,9 +53,9 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
         for batch in tqdm(dl):
             optimizer.zero_grad()
 
-            timestep = randint(0, ns.steps)
+            timestep = torch.randint(0, ns.steps, (defaults.batch_size,), device=defaults.device)
             image, noise = ns.forward_diffusion(batch, timestep)
-            noise_ = model(image, torch.Tensor([timestep], device=defaults.device))
+            noise_ = model(image, timestep)
             
             loss = F.l1_loss(noise_, noise)
             loss.backward()

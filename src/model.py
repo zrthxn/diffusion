@@ -3,26 +3,59 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from logging import info
-from noise import NoiseScheduler
 
-class DenoisingBlock(nn.Module):
+from .noise import NoiseScheduler
+
+class DownsampleBlock(nn.Module):
     def __init__(self, 
         in_channels: int, 
         out_channels: int, 
-        time_emb_dim: int, 
-        upsample = False):
+        time_emb_dim: int):
 
         super().__init__()
         
         self.time =  nn.Linear(time_emb_dim, out_channels)
         self.in_bnorm = nn.BatchNorm2d(out_channels)
         
-        if upsample:
-            self.in_conv = nn.Conv2d(2*in_channels, out_channels, kernel_size=3, padding=1)
-            self.transform = nn.ConvTranspose2d(out_channels, out_channels, 4, 2, 1)
-        else:
-            self.in_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
-            self.transform = nn.Conv2d(out_channels, out_channels, 4, 2, 1)
+        self.in_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.transform = nn.Conv2d(out_channels, out_channels, 4, 2, 1)
+    
+        self.out_bnorm = nn.BatchNorm2d(out_channels)
+        self.out_conv = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        
+    def forward(self, x, t, ):
+        # First Conv
+        h = self.in_bnorm(F.relu(self.in_conv(x)))
+
+        # Time embedding
+        time_emb = F.relu(self.time(t))
+        
+        # Extend last 2 dimensions
+        time_emb = time_emb[(..., ) + (None, ) * 2]
+        
+        # Add time channel
+        h = h + time_emb
+        
+        # Second Conv
+        h = self.out_bnorm(F.relu(self.out_conv(h)))
+        
+        # Down or Upsample
+        return self.transform(h)
+
+
+class UpsampleBlock(nn.Module):
+    def __init__(self, 
+        in_channels: int, 
+        out_channels: int, 
+        time_emb_dim: int):
+
+        super().__init__()
+        
+        self.time =  nn.Linear(time_emb_dim, out_channels)
+        self.in_bnorm = nn.BatchNorm2d(out_channels)
+        
+        self.in_conv = nn.Conv2d(2*in_channels, out_channels, kernel_size=3, padding=1)
+        self.transform = nn.ConvTranspose2d(out_channels, out_channels, 4, 2, 1)
         
         self.out_bnorm = nn.BatchNorm2d(out_channels)
         self.out_conv = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
@@ -86,7 +119,7 @@ class DenoisingDiffusion(nn.Module):
 
         # Downsample
         self.downsample = nn.ModuleList([
-            DenoisingBlock(
+            DownsampleBlock(
                 self.down_channels[i], 
                 self.down_channels[i+1], 
                 self.time_emb_dim) \
@@ -94,11 +127,10 @@ class DenoisingDiffusion(nn.Module):
 
         # Upsample
         self.upsample = nn.ModuleList([
-            DenoisingBlock(
+            UpsampleBlock(
                 self.up_channels[i], 
                 self.up_channels[i+1], 
-                self.time_emb_dim, 
-                upsample=True) \
+                self.time_emb_dim) \
                 for i in range(len(self.up_channels)-1) ])
 
         self.output = nn.Conv2d(self.up_channels[-1], 3, self.out_dim)
@@ -126,15 +158,15 @@ class DenoisingDiffusion(nn.Module):
 
     @torch.no_grad()
     def sample(self, ns: NoiseScheduler):
-        image = torch.randn((1, 3, 64, 64), device=self.device)
+        image = torch.randn((1, 3, 64, 64), device=ns.device)
 
-        for t in range(self.steps)[::-1]:
+        for t in range(ns.steps)[::-1]:
             beta = ns.schedule[t]
-            alphas_ = ns.oneminus_sqrt_alphacp[t]
+            alphas_ = ns.sqrt_oneminus_alphacp[t]
             alphas_rp = ns.sqrt_alpha_rp[t]
             
             # Call model (noise - prediction)
-            step = torch.tensor([t], device=self.device)
+            step = torch.tensor([t], device=ns.device)
             noise_ = (beta / alphas_) * self(image, step)
             image_ = alphas_rp * (image - noise_)
 
