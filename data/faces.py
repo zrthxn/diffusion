@@ -23,12 +23,11 @@ class FacesDataset(ImageDataset):
         for f in paths:
             try:
                 im = read_image(f, mode=ImageReadMode.RGB).to(defaults.device)
-                #.permute(1, 2, 0)
                 if norm:
                     im = ((im / 255.) * 2.) - 1.
                 self.images.append(im)
             except Exception as e:
-                print(e)
+                print(Warning(e))
                 continue
 
         info(f"Read {len(self.images)} face images")
