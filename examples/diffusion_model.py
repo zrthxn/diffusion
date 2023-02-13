@@ -121,18 +121,18 @@ def get_index_from_list(vals, t, x_shape):
     out = out.reshape(batch_size, *((1,) * (len(x_shape) - 1))).to(t.device)
     return out
 
-def forward_diffusion_sample(input_, timestep, device="cpu"):
+def forward_diffusion_sample(image, timestep, device="cpu"):
     """ 
     Takes an image and a timestep as input and 
     returns the noisy version of it
     """
-    noise = torch.randn_like(input_)
+    noise = torch.randn_like(image)
     
-    sqrta_t = get_index_from_list(sqrt_alphas, timestep, input_.shape)
-    sqrta_t_ = get_index_from_list(sqrt_alphas_, timestep, input_.shape)
+    sqrta_t = get_index_from_list(sqrt_alphacp, timestep, image.shape)
+    sqrta_t_ = get_index_from_list(sqrt_oneminus_alphacp, timestep, image.shape)
 
     # mean + variance
-    diff = (sqrta_t * input_) + (sqrta_t_ * noise)
+    diff = (sqrta_t * image) + (sqrta_t_ * noise)
     return diff, noise.to(device)
 
 
@@ -142,12 +142,12 @@ schedule = linear_schedule(timesteps=T)
 
 # Pre-calculate different terms for closed form
 alphas = 1. - schedule
-alphcp = torch.cumprod(alphas, axis=0)
-alphcp_shift = F.pad(alphcp[:-1], (1, 0), value=1.0)
+alpha_cumprod = torch.cumprod(alphas, axis=0)
+alpha_shift = F.pad(alpha_cumprod[:-1], (1, 0), value=1.0)
 sqrt_alpha_rp = torch.sqrt(1.0 / alphas)
-sqrt_alphas = torch.sqrt(alphcp)
-sqrt_alphas_ = torch.sqrt(1. - alphcp)
-posterior_variance = schedule * (1. - alphcp_shift) / (1. - alphcp)
+sqrt_alphacp = torch.sqrt(alpha_cumprod)
+sqrt_oneminus_alphacp = torch.sqrt(1. - alpha_cumprod)
+posterior_variance = schedule * (1. - alpha_shift) / (1. - alpha_cumprod)
 #%%
 """Let's test it on our dataset ..."""
 
@@ -271,13 +271,20 @@ class SimpleUnet(nn.Module):
         self.conv0 = nn.Conv2d(image_channels, down_channels[0], 3, padding=1)
 
         # Downsample
-        self.downs = nn.ModuleList([Block(down_channels[i], down_channels[i+1], \
-                                    time_emb_dim) \
-                    for i in range(len(down_channels)-1)])
+        self.downs = nn.ModuleList([
+            Block(
+                down_channels[i], 
+                down_channels[i+1], \
+                time_emb_dim) \
+                for i in range(len(down_channels)-1)])
+
         # Upsample
-        self.ups = nn.ModuleList([Block(up_channels[i], up_channels[i+1], \
-                                        time_emb_dim, up=True) \
-                    for i in range(len(up_channels)-1)])
+        self.ups = nn.ModuleList([
+            Block(
+                up_channels[i], 
+                up_channels[i+1],
+                time_emb_dim, up=True) \
+                for i in range(len(up_channels)-1)])
 
         self.output = nn.Conv2d(up_channels[-1], 3, out_dim)
 
@@ -336,7 +343,7 @@ def sample_plot_image(num_checkpoints = 10):
         t = torch.full((1,), i, device=device, dtype=torch.long)
         
         betas_t = get_index_from_list(schedule, t, img.shape)
-        sqrt_one_minus_alphas_cumprod_t = get_index_from_list(sqrt_alphas_, t, img.shape)
+        sqrt_one_minus_alphas_cumprod_t = get_index_from_list(sqrt_oneminus_alphacp, t, img.shape)
         sqrt_recip_alphas_t = get_index_from_list(sqrt_alpha_rp, t, img.shape)
         
         # Call model (current image - noise prediction)

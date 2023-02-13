@@ -61,7 +61,8 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
             timestep = torch.randint(0, ns.steps, 
                 size=(defaults.batch_size,), 
-                device=defaults.device)
+                device=defaults.device,
+                dtype=torch.long)
             
             image_, noise = ns.forward_diffusion(batch, timestep)
             noise_ = model(image_, timestep)

@@ -40,11 +40,10 @@ class NoiseScheduler:
         else:
             raise ValueError('Unknown noise schedule type')
         
-        alphas = (1. - self.schedule).to(device)
-        alphacp = torch.cumprod(alphas, axis=0).to(device)
-        alphacp_shift = F.pad(alphacp[:-1], (1,0), value=1.0).to(device)
+        self.alphas = (1. - self.schedule).to(device)
 
-        self.sqrt_alpha_rp = torch.sqrt(1. / alphas).to(device)
+        alphacp = torch.cumprod(self.alphas, axis=0).to(device)
+        alphacp_shift = F.pad(alphacp[:-1], (1,0), value=1.0).to(device)
 
         self.sqrt_alphacp = torch.sqrt(alphacp).to(device)
         self.sqrt_oneminus_alphacp = torch.sqrt(1. - alphacp).to(device)
@@ -52,7 +51,7 @@ class NoiseScheduler:
         self.posterior_variance = self.schedule * (1. - alphacp_shift) / (1. - alphacp)
 
     def forward_diffusion(self, image: Tensor, timestep: Union[int, Tensor]) -> Tensor:
-        noise = torch.rand_like(image)
+        noise = torch.rand_like(image, device=image.device)
 
         sqrt_a_t = self.sqrt_alphacp[timestep]
         sqrt_a_t_ = self.sqrt_oneminus_alphacp[timestep]

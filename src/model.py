@@ -14,7 +14,7 @@ class DownsampleBlock(nn.Module):
 
         super().__init__()
         
-        self.time =  nn.Linear(time_emb_dim, out_channels)
+        self.time_mlp =  nn.Linear(time_emb_dim, out_channels)
         self.in_bnorm = nn.BatchNorm2d(out_channels)
         
         self.in_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
@@ -28,7 +28,7 @@ class DownsampleBlock(nn.Module):
         h = self.in_bnorm(F.relu(self.in_conv(x)))
 
         # Time embedding
-        time_emb = F.relu(self.time(t))
+        time_emb = F.relu(self.time_mlp(t))
         
         # Extend last 2 dimensions
         time_emb = time_emb[(..., ) + (None, ) * 2]
@@ -51,7 +51,7 @@ class UpsampleBlock(nn.Module):
 
         super().__init__()
         
-        self.time =  nn.Linear(time_emb_dim, out_channels)
+        self.time_mlp =  nn.Linear(time_emb_dim, out_channels)
         self.in_bnorm = nn.BatchNorm2d(out_channels)
         
         self.in_conv = nn.Conv2d(2*in_channels, out_channels, kernel_size=3, padding=1)
@@ -65,7 +65,7 @@ class UpsampleBlock(nn.Module):
         h = self.in_bnorm(F.relu(self.in_conv(x)))
 
         # Time embedding
-        time_emb = F.relu(self.time(t))
+        time_emb = F.relu(self.time_mlp(t))
         
         # Extend last 2 dimensions
         time_emb = time_emb[(..., ) + (None, ) * 2]
@@ -160,13 +160,18 @@ class DenoisingDiffusion(nn.Module):
     def sample(self, ns: NoiseScheduler):
         image = torch.randn((1, 3, 64, 64), device=ns.device)
 
-        for i in range(ns.steps)[::-1]:
-            t = torch.full((1,), i, device=ns.device)
+        for i in range(0, ns.steps)[::-1]:
+            t = torch.full((1,), i, device=ns.device, dtype=torch.long)
 
             beta = ns.schedule[t]
             alphas_ = ns.sqrt_oneminus_alphacp[t]
-            alphas_rp = ns.sqrt_alpha_rp[t]
-            
+            alphas_rp = torch.sqrt(1. / ns.alphas[t])
+
+            shape = torch.Size( ( image.shape[0], *((1,) * (len(image.shape) - 1)) ) )
+            beta = beta.reshape(shape)
+            alphas_ = alphas_.reshape(shape)
+            alphas_rp = alphas_rp.reshape(shape)
+        
             # Call model (noise - prediction)
             mean = alphas_rp * (image - beta * self(image, t) / alphas_)
 
