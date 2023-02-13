@@ -1,4 +1,5 @@
 #!python
+import os
 import torch
 import logging
 from sys import argv
@@ -8,7 +9,6 @@ from typing import Tuple
 from logging import info
 from torch.nn import functional as F
 from matplotlib import pyplot as plt
-from random import randint
 
 from data import ImageDataset, FacesDataset, CarsDataset
 from src.config import defaults, makeconfig, print_help
@@ -46,6 +46,10 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
     model.to(defaults.device)
     optimizer = torch.optim.Adam(model.parameters(), lr=defaults.lr)
 
+    if not os.path.exists('.checkpoints'):
+        os.mkdir('.checkpoints')
+    ns.save(f".checkpoints/scheduler.json")
+
     __start = time()
     losslog = list()
     for E in range(1, defaults.epochs + 1):
@@ -70,6 +74,9 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
             if defaults.dryrun: 
                 break
+
+        # Save checkpoint for this epoch
+        torch.save(model, f".checkpoints/epoch_{E}.pt")
 
         plt.figure(figsize=(12,4), dpi=150)
         plt.semilogy(losslog)
