@@ -105,7 +105,7 @@ class DenoisingDiffusion(nn.Module):
         super().__init__()
         info("Initialize Model")
 
-        self.up_channels, self.down_channels = shape
+        self.down_channels, self.up_channels = shape
         
         # Time embedding
         self.time_mlp = nn.Sequential(

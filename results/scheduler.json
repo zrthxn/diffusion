@@ -1,1 +1,6 @@
-{"ntype": "linear", "steps": 8, "start": 0.001, "end": 1.0}
+{
+    "ntype": "linear",
+    "steps": 300,
+    "start": 0.0001,
+    "end": 0.02
+}

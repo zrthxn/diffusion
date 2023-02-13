@@ -95,6 +95,61 @@ def train() -> Tuple[torch.nn.Module, NoiseScheduler]:
 
 def test(model: torch.nn.Module, ns: NoiseScheduler):
     info("Start Testing")
+
+    # model = torch.load("results/model.pt", map_location="cpu")
+    # ns = NoiseScheduler.load("results/scheduler.json")
+    # model = model.eval()
+
+    # with torch.no_grad():
+    #     img = torch.randn((1, 3, 64, 64), device=ns.device)
+    #     img = img / ( img.max() - img.min() )
+    #     shape = torch.Size( ( img.shape[0], *((1,) * (len(img.shape) - 1)) ) )
+
+    #     for i in range(ns.steps)[::-1]:
+    #         t = torch.full((1,), i, device=ns.device)
+
+    #         beta = ns.schedule[t].reshape(shape)
+    #         alphas_ = ns.sqrt_oneminus_alphacp[t].reshape(shape)
+    #         alphas_rp = torch.sqrt(1. / ns.alphas[t]).reshape(shape)
+            
+    #         # Call model (noise - prediction)
+    #         mean = alphas_rp * (img - beta * model(img, t) / alphas_)
+
+    #         if torch.isnan(mean).any():
+    #             print(
+    #                 "B1",
+    #                 ns.schedule[i+1],
+    #                 ns.sqrt_oneminus_alphacp[i+1],
+    #                 torch.sqrt(1. / ns.alphas[i+1]),
+    #                 ns.posterior_variance[i+1]
+    #             )
+
+    #             print(model(img, t))
+    #             break
+    #         else:
+    #             if i > 0:
+    #                 noise = torch.randn_like(img)
+    #                 img = mean + torch.sqrt(ns.posterior_variance[t]).reshape(shape) * noise
+    #             else:
+    #                 img = mean
+
+    #             if torch.isnan(img).any():
+    #                 print(
+    #                     "B2",
+    #                     mean,
+    #                     torch.sqrt(ns.posterior_variance[t]).reshape(shape),
+    #                     noise
+    #                 )
+    #                 break
+
+    #     im = img.detach().squeeze().permute(1, 2, 0).cpu().numpy()
+    #     im = im / (im.max() - im.min())
+    #     im = (im + 1.) / 2.
+        
+    #     plt.imshow(im)
+    #     plt.show()
+    #     plt.close()
+
     ImageDataset.plot([ model.sample(ns) for _ in range(16) ], 
         save=f"results/generated.png")
 

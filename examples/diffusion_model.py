@@ -367,7 +367,7 @@ from torch.optim import Adam
 
 model.to(device)
 optimizer = Adam(model.parameters(), lr=0.001)
-epochs = 100 # Try more!
+epochs = 100 # Try more! 
 
 for epoch in range(epochs):
     for step, batch in enumerate(dataloader):
