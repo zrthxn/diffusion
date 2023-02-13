@@ -1,5 +1,6 @@
 import json
 import torch
+from typing import Union
 from torch import Tensor
 from torch.nn import functional as F
 from logging import info
@@ -50,7 +51,7 @@ class NoiseScheduler:
         
         self.posterior_variance = self.schedule * (1. - alphacp_shift) / (1. - alphacp)
 
-    def forward_diffusion(self, image: Tensor, timestep: int | Tensor) -> Tensor:
+    def forward_diffusion(self, image: Tensor, timestep: Union[int, Tensor]) -> Tensor:
         noise = torch.rand_like(image)
 
         sqrt_a_t = self.sqrt_alphacp[timestep]
