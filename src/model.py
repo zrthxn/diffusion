@@ -159,19 +159,15 @@ class DenoisingDiffusion(nn.Module):
     @torch.no_grad()
     def sample(self, ns: NoiseScheduler):
         image = torch.randn((1, 3, 64, 64), device=ns.device)
+        shape = torch.Size( ( image.shape[0], *((1,) * (len(image.shape) - 1)) ) )
 
         for i in range(0, ns.steps)[::-1]:
             t = torch.full((1,), i, device=ns.device, dtype=torch.long)
 
-            beta = ns.schedule[t]
-            alphas_ = ns.sqrt_oneminus_alphacp[t]
-            alphas_rp = torch.sqrt(1. / ns.alphas[t])
+            beta = ns.schedule[t].reshape(shape)
+            alphas_ = ns.sqrt_oneminus_alphacp[t].reshape(shape)
+            alphas_rp = torch.sqrt(1. / ns.alphas[t]).reshape(shape)
 
-            shape = torch.Size( ( image.shape[0], *((1,) * (len(image.shape) - 1)) ) )
-            beta = beta.reshape(shape)
-            alphas_ = alphas_.reshape(shape)
-            alphas_rp = alphas_rp.reshape(shape)
-        
             # Call model (noise - prediction)
             mean = alphas_rp * (image - beta * self(image, t) / alphas_)
 
