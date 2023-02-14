@@ -1,6 +1,1 @@
-{
-    "ntype": "linear",
-    "steps": 300,
-    "start": 0.0001,
-    "end": 0.02
-}
+{"ntype": "cosine", "steps": 300, "start": 0.0001, "end": 0.02}

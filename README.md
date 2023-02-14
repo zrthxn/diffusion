@@ -4,6 +4,13 @@ A basic diffusion model based on the seminal paper by [Jonathan Ho et al.](https
 
 <img src="results/forward.png">
 
+### Generated Images
+These are a few examples of what this model generated after **a lot** of debugging.
+<img src="results/generated.png">
+
+### Loss Log
+<img src="results/losslog.png">
+
 ### Dataset
 [Smiling or Not Face Data](https://www.kaggle.com/datasets/chazzer/smiling-or-not-face-data)
 from Kaggle.
@@ -13,16 +20,25 @@ I will combine all the categories of faces into one single dataset.
 
 ## Usage
 
-Basic usage
+Installation
 
 ```bash
 pipenv shell
-```
-```bash
 pipenv install
 ```
+
+Dryrun Sanity Check
 ```bash
-./main.py train
+python main.py train --dryrun
+```
+
+Full Training
+```bash
+python main.py train \
+    --batch_size=128 \
+    --device=cuda \
+    --lr=0.001 \
+    --epochs=100
 ```
 
 ## Resources
