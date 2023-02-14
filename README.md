@@ -8,9 +8,6 @@ A basic diffusion model based on the seminal paper by [Jonathan Ho et al.](https
 These are a few examples of what this model generated after **a lot** of debugging.
 <img src="results/generated.png">
 
-### Loss Log
-<img src="results/losslog.png">
-
 ### Dataset
 [Smiling or Not Face Data](https://www.kaggle.com/datasets/chazzer/smiling-or-not-face-data)
 from Kaggle.
