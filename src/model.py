@@ -169,10 +169,10 @@ class DenoisingDiffusion(nn.Module):
             alphas_rp = torch.sqrt(1. / ns.alphas[t]).reshape(shape)
 
             # Call model (noise - prediction)
-            image = alphas_rp * (image - beta * self(image, t) / alphas_)
+            image = alphas_rp * (image - (beta * self(image, t) / alphas_))
 
             if i > 0:
                 noise = torch.randn_like(image)
                 image = image + torch.sqrt(ns.posterior_variance[t]).reshape(shape) * noise
 
-        return image
+        return image.detach()

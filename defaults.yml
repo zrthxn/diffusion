@@ -6,7 +6,7 @@ debug: False
 dryrun: False
 
 # Noise Scheduler parameters
-schedule: "linear" 
+schedule: "cosine" 
 timesteps: 300
 start: 0.0001
 end: 0.020

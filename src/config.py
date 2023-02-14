@@ -26,9 +26,6 @@ def makeconfig(argv: list):
     if config_dict["dryrun"]:
         config_dict = { **config_dict,
             "batch_size": 16,
-            "timesteps": 8,
-            "start": 0.001,
-            "end": 1.000,
             "epochs": 1,
         }
 
