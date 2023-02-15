@@ -141,4 +141,3 @@ if __name__ == "__main__":
         else:
             print(f"Unknown command `{command}`")
             print_help()
-    exit(0)

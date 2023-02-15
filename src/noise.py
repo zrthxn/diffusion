@@ -50,17 +50,13 @@ class NoiseScheduler:
         
         self.posterior_variance = self.schedule * (1. - alphacp_shift) / (1. - alphacp)
 
-    def forward_diffusion(self, image: Tensor, timestep: Union[int, Tensor]) -> Tensor:
+    def forward_diffusion(self, image: Tensor, timestep: Tensor) -> Tensor:
         noise = torch.randn_like(image, device=image.device)
+        shape = torch.Size( ( image.shape[0], *((1,) * (len(image.shape) - 1)) ) )
 
-        mean = self.sqrt_alphacp[timestep]
-        vari = self.sqrt_oneminus_alphacp[timestep]
-
-        if type(timestep) == Tensor:
-            shape = torch.Size( ( image.shape[0], *((1,) * (len(image.shape) - 1)) ) )
-            mean = mean.reshape(shape)
-            vari = vari.reshape(shape)
-
+        mean = self.sqrt_alphacp[timestep].reshape(shape)
+        vari = self.sqrt_oneminus_alphacp[timestep].reshape(shape)
+        
         diff = (mean * image) + (vari * noise) 
         return diff, noise
 
