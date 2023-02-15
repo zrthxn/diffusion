@@ -1,13 +1,12 @@
 import json
 import torch
-from typing import Union
+import math
 from torch import Tensor
 from torch.nn import functional as F
 from logging import info
 
 linear = lambda start, end, steps: torch.linspace(start, end, steps)
-cosine = lambda start, end, steps: torch.sin(linear(start, end, steps))
-expont = lambda start, end, steps: torch.exp(linear(start, end, steps))
+expont = lambda start, end, steps: torch.exp(linear(math.log(start), math.log(end), steps))
 
 
 class NoiseScheduler:
@@ -33,8 +32,6 @@ class NoiseScheduler:
 
         if ntype == 'linear':
             self.schedule = linear(start, end, steps).to(device)
-        elif ntype == 'cosine':
-            self.schedule = cosine(start, end, steps).to(device)
         elif ntype == 'exponential':
             self.schedule = expont(start, end, steps).to(device)
         else:
