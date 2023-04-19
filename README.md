@@ -50,4 +50,5 @@ Videos and Code
 - https://www.youtube.com/watch?v=HoKDTa5jHvg
 - https://www.youtube.com/watch?v=a4Yfz2FxXiY
 - https://amaarora.github.io/2020/09/13/unet.html
+- https://lilianweng.github.io/posts/2021-07-11-diffusion-models/
 - https://colab.research.google.com/drive/1sjy9odlSSy0RBVgMTgP7s99NXsqglsUL
