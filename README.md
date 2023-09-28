@@ -26,6 +26,12 @@ pipenv shell
 pipenv install
 ```
 
+Download Dataset
+```bash
+git clone https://huggingface.co/datasets/zrthxn/SmilingOrNot data/faces
+unzip data/faces/Archive.zip -d data/faces
+```
+
 Dryrun Sanity Check
 ```bash
 python main.py train --dryrun
