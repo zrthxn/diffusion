@@ -6,9 +6,12 @@ A basic diffusion model based on the seminal paper by [Jonathan Ho et al.](https
 
 ### Generated Images
 These are a few examples of what this model generated after **a lot** of debugging.
-Find a few trained models and other things **[at this link.](https://drive.google.com/drive/folders/1wvfw4cyWW4piailWaOyOvPn9btPL7-qU?usp=sharing)**
 <br><br>
 <img src="results/generated.png">
+
+### Trained Model
+
+Find a few trained models and other things **[on HuggingFace.](https://huggingface.co/zrthxn/diffusion)**
 
 ### Dataset
 [Smiling or Not Face Data](https://www.kaggle.com/datasets/chazzer/smiling-or-not-face-data)
