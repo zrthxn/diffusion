@@ -17,28 +17,27 @@ logging.basicConfig(level=logging.INFO)
 
 
 def train(device = "cpu",
-          dataset = "faces",
-          batch_size = 16,
-          debug = False,
-          dryrun = False,
-          
-          # Noise Scheduler parameters
-          schedule = "linear",
-          timesteps = 300,
-          start = 0.0001,
-          end = 0.020,
-          
-          # Training parameterss
-          lr = 0.001,
-          epochs = 50,
-          
-          # Model shape
-          shape = (
-              # Downsampling
-              [64, 128, 256, 512, 1024],
-              # Upsampling
-              [1024, 512, 256, 128, 64],
-          )) -> Tuple[torch.nn.Module, NoiseScheduler]:
+        dataset = "faces",
+        batch_size = 16,
+        debug = False,
+        dryrun = False,
+        
+        # Noise Scheduler parameters
+        schedule = "linear",
+        timesteps = 300,
+        start = 0.0001,
+        end = 0.020,
+        
+        # Training parameterss
+        lr = 0.001,
+        epochs = 50,
+        
+        # Model shape
+        shape = (
+        # Downsampling
+        [64, 128, 256, 512, 1024],
+        # Upsampling
+        [1024, 512, 256, 128, 64])):
     """ Train a new model from scratch.
     """
     
