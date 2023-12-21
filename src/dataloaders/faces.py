@@ -3,7 +3,6 @@ from torchvision.io import read_image, ImageReadMode
 from logging import info
 
 from . import ImageDataset
-from src.config import defaults
 
 class FacesDataset(ImageDataset):
     """
@@ -12,7 +11,7 @@ class FacesDataset(ImageDataset):
     
     path = 'data/faces'
 
-    def __init__(self, norm = True) -> None:
+    def __init__(self, device = 'cpu', norm = True) -> None:
         info("Building Faces Dataset")
         paths = list()
         for subdir in ['smile', 'non_smile', 'test']:
@@ -22,7 +21,7 @@ class FacesDataset(ImageDataset):
 
         for f in paths:
             try:
-                im = read_image(f, mode=ImageReadMode.RGB).to(defaults.device)
+                im = read_image(f, mode=ImageReadMode.RGB).to(device)
                 if norm:
                     im = ((im / 255.) * 2.) - 1.
                 self.images.append(im)
