@@ -11,7 +11,7 @@ from upycli.decorator import command
 
 from src.dataloaders import ImageDataset, FacesDataset, CarsDataset
 from src.noise import NoiseScheduler
-from src.model import DenoisingDiffusion
+from src.models.basic import BasicDenoisingDiffusion
 
 logging.basicConfig(level=logging.INFO)
 
@@ -60,7 +60,7 @@ def train(device = "cpu",
         device=device)
 
     # Build model
-    model = DenoisingDiffusion(shape)
+    model = BasicDenoisingDiffusion(shape)
     param_size = sum([p.numel() for p in model.parameters()])
     info(f"DenoisingDiffusion Model :: {param_size} parameters")
 

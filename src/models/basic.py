@@ -4,7 +4,7 @@ from torch import nn
 from torch.nn import functional as F
 from logging import info
 
-from .noise import NoiseScheduler
+from ..noise import NoiseScheduler
 
 class DownsampleBlock(nn.Module):
     def __init__(self, 
@@ -96,7 +96,7 @@ class SinusoidalPositionEmbeddings(nn.Module):
         return embeddings
 
 
-class DenoisingDiffusion(nn.Module):
+class BasicDenoisingDiffusion(nn.Module):
     out_dim = 1 
     time_emb_dim = 32
     image_channels = 3
