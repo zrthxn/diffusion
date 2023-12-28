@@ -118,17 +118,11 @@ def train(device = "cpu",
 
 
 @command
-def test(model_path = "results/model.pt", ns_path = "results/scheduler.json", device = "cpu"):
+def test(model = "results/model.pt", ns_path = "results/scheduler.json", device = "cpu"):
     """ Run a model from a given path.
     """
     
     info("Start Testing")
-    model = torch.load(model_path, map_location=device)
+    model = torch.load(model, map_location=device)
     ns = NoiseScheduler.load(ns_path, device=device)
     ImageDataset.plot(model.sample(ns, 16), save=f"results/generated.png")
-
-    
-    
-@command
-def train2(model: str, path: str = "./path/to/data"):
-    ...

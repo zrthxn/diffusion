@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6953f6af36d4e87132bc8be148cbd2c8a340ea0e4fc5e4580361a31a5aa05bd5"
+            "sha256": "4142872ffed302c2c97ab9722b751810ec2df118c3bf6dd4930a4f556d6b45cc"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1147,12 +1147,8 @@
             "version": "==4.9.0"
         },
         "upycli": {
-            "hashes": [
-                "sha256:20a1b78f1a028ae8be38fa8d79693b8b21bb16bd43affbfeb539bdbf1afe34ce",
-                "sha256:4b5c4e78bb93e469cb2ceddc3bae81a0cb93479161dff27e67bbd13754b149a1"
-            ],
-            "index": "pypi",
-            "version": "==0.2.1"
+            "editable": true,
+            "file": "../uPyCLI"
         },
         "urllib3": {
             "hashes": [

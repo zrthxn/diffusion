@@ -35,7 +35,7 @@ class NoiseScheduler:
         elif ntype == 'exponential':
             self.schedule = expont(start, end, steps).to(device)
         else:
-            raise ValueError('Unknown noise schedule type')
+            raise ValueError(f'Unknown noise schedule type `{ntype}`')
         
         self.alphas = (1. - self.schedule).to(device)
 
