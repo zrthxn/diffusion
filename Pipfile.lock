@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4142872ffed302c2c97ab9722b751810ec2df118c3bf6dd4930a4f556d6b45cc"
+            "sha256": "6953f6af36d4e87132bc8be148cbd2c8a340ea0e4fc5e4580361a31a5aa05bd5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -340,20 +340,20 @@
         },
         "ipykernel": {
             "hashes": [
-                "sha256:7d5d594b6690654b4d299edba5e872dc17bb7396a8d0609c97cb7b8a1c605de6",
-                "sha256:dab88b47f112f9f7df62236511023c9bdeef67abc73af7c652e4ce4441601686"
+                "sha256:69c11403d26de69df02225916f916b37ea4b9af417da0a8c827f84328d88e5f3",
+                "sha256:c6e9a9c63a7f4095c0a22a79f765f079f9ec7be4f2430a898ddea889e8665661"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.8'",
-            "version": "==6.27.1"
+            "version": "==6.28.0"
         },
         "ipython": {
             "hashes": [
-                "sha256:ca6f079bb33457c66e233e4580ebfc4128855b4cf6370dddd73842a9563e8a27",
-                "sha256:e8267419d72d81955ec1177f8a29aaa90ac80ad647499201119e2f05e99aa397"
+                "sha256:2f55d59370f59d0d2b2212109fe0e6035cfea436b1c0e6150ad2244746272ec5",
+                "sha256:ac4da4ecf0042fb4e0ce57c60430c2db3c719fa8bdf92f8631d6bd8a5785d1f0"
             ],
-            "markers": "python_version >= '3.9'",
-            "version": "==8.18.1"
+            "markers": "python_version >= '3.10'",
+            "version": "==8.19.0"
         },
         "jedi": {
             "hashes": [
@@ -381,11 +381,11 @@
         },
         "jupyter-core": {
             "hashes": [
-                "sha256:1553311a97ccd12936037f36b9ab4d6ae8ceea6ad2d5c90d94a909e752178e40",
-                "sha256:220dfb00c45f0d780ce132bb7976b58263f81a3ada6e90a9b6823785a424f739"
+                "sha256:2970f1554685c89ebfedd784e44eea62d17a935e817f7bb704329a6129e178ca",
+                "sha256:7613ee3c01f1b0632b927d368bf4e2f5d38503320b2179eec46eea91d026b0ce"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==5.5.1"
+            "version": "==5.6.0"
         },
         "kiwisolver": {
             "hashes": [
@@ -1147,8 +1147,12 @@
             "version": "==4.9.0"
         },
         "upycli": {
-            "editable": true,
-            "file": "../uPyCLI"
+            "hashes": [
+                "sha256:20a1b78f1a028ae8be38fa8d79693b8b21bb16bd43affbfeb539bdbf1afe34ce",
+                "sha256:4b5c4e78bb93e469cb2ceddc3bae81a0cb93479161dff27e67bbd13754b149a1"
+            ],
+            "index": "pypi",
+            "version": "==0.2.1"
         },
         "urllib3": {
             "hashes": [
