@@ -7,6 +7,7 @@ from logging import info
 
 linear = lambda start, end, steps: torch.linspace(start, end, steps)
 expont = lambda start, end, steps: torch.exp(linear(math.log(start), math.log(end), steps))
+cosine = lambda start, end, steps: (end - start)/2 * (torch.cos(linear(torch.pi, 2 * torch.pi, steps)) + 1) + start
 
 
 class NoiseScheduler:
@@ -34,6 +35,8 @@ class NoiseScheduler:
             self.schedule = linear(start, end, steps).to(device)
         elif ntype == 'exponential':
             self.schedule = expont(start, end, steps).to(device)
+        elif ntype == 'cosine':
+            self.schedule = cosine(start, end, steps).to(device)
         else:
             raise ValueError(f'Unknown noise schedule type `{ntype}`')
         
