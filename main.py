@@ -7,11 +7,11 @@ from tqdm import tqdm
 from logging import info
 from torch.nn import functional as F
 from matplotlib import pyplot as plt
-from upycli.decorator import command
+from upycli import command
 
 from src.dataloaders import ImageDataset, FacesDataset, CarsDataset
 from src.noise import NoiseScheduler
-from src.models.basic import BasicDenoisingDiffusion
+from src.model import DenoisingDiffusion
 
 logging.basicConfig(level=logging.INFO)
 
@@ -60,7 +60,7 @@ def train(device = "cpu",
         device=device)
 
     # Build model
-    model = BasicDenoisingDiffusion(shape)
+    model = DenoisingDiffusion(shape)
     param_size = sum([p.numel() for p in model.parameters()])
     info(f"DenoisingDiffusion Model :: {param_size} parameters")
 

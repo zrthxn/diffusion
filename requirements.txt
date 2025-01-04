@@ -1,0 +1,9 @@
+torch
+matplotlib
+torchvision
+coloredlogs
+tqdm
+pyyaml
+scipy
+ipykernel
+upycli

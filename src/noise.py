@@ -5,6 +5,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from logging import info
 
+
 linear = lambda start, end, steps: torch.linspace(start, end, steps)
 expont = lambda start, end, steps: torch.exp(linear(math.log(start), math.log(end), steps))
 cosine = lambda start, end, steps: (end - start)/2 * (torch.cos(linear(torch.pi, 2 * torch.pi, steps)) + 1) + start
