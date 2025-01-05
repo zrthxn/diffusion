@@ -120,7 +120,7 @@ def train(device = "cpu",
 
 
 @command
-def test(model: str, ns_path: str, output_dir: str, device = "cpu"):
+def test(model: str, ns_path: str, output_dir: str, device: str = "cpu"):
     """ Run a model from a given path.
     """
     
@@ -129,5 +129,6 @@ def test(model: str, ns_path: str, output_dir: str, device = "cpu"):
     ns = NoiseScheduler.load(ns_path, device=device)
     
     image, evo = model.sample(ns, 16, return_evolution=True)
-    plot(model.sample(ns, 16), save=f"{output_dir}/generated.png")
-    write_gif(evo, save=f"{output_dir}/evolution.gif", fps=8)
+    plot(image, save=f"{output_dir}/generated.png")
+    input("Continue?")
+    write_gif(evo, path=f"{output_dir}/evolution.gif", fps=16)

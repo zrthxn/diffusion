@@ -1,5 +1,6 @@
 import math
 import torch
+from tqdm import tqdm
 from torch import nn
 from torch.nn import functional as F
 from logging import info
@@ -161,8 +162,8 @@ class DenoisingDiffusion(nn.Module):
         image = torch.randn((n_samples, 3, 64, 64), device=ns.device)
         shape = torch.Size(( image.shape[0], *((1,) * (len(image.shape) - 1)) ))
 
-        evolution = [ image.copy() ]
-        for i in range(0, ns.steps)[::-1]:
+        evolution = [ image ]
+        for i in tqdm(range(0, ns.steps)[::-1]):
             t = torch.full((n_samples,), i, device=ns.device, dtype=torch.long)
 
             beta = ns.schedule[t].reshape(shape)
@@ -176,8 +177,8 @@ class DenoisingDiffusion(nn.Module):
                 noise = torch.randn_like(image)
                 image = image + torch.sqrt(ns.posterior_variance[t]).reshape(shape) * noise
             
-            evolution.append(image.copy())
+            evolution.append(image)
 
         if return_evolution:
-            image.detach(), evolution
+            return image.detach(), evolution
         return image.detach()
