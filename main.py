@@ -12,6 +12,7 @@ from upycli import command
 from src.dataloaders import ImageDataset, FacesDataset, CarsDataset
 from src.noise import NoiseScheduler
 from src.model import DenoisingDiffusion
+from src.utils import plot, write_gif
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,6 +22,7 @@ def train(device = "cpu",
         dataset = "faces",
         debug = False,
         dryrun = False,
+        output_dir = ".",
         
         # Noise Scheduler parameters
         schedule = "linear",
@@ -70,9 +72,9 @@ def train(device = "cpu",
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-    if not os.path.exists('.checkpoints'):
-        os.mkdir('.checkpoints')
-    ns.save(f".checkpoints/scheduler.json")
+    if not os.path.exists(f"{output_dir}/.checkpoints"):
+        os.mkdir(f"{output_dir}/.checkpoints")
+    ns.save(f"{output_dir}/.checkpoints/scheduler.json")
 
     __start = time()
     losslog = list()
@@ -101,28 +103,31 @@ def train(device = "cpu",
                 break
 
         # Save checkpoint for this epoch
-        torch.save(model, f".checkpoints/epoch_{E}.pt")
+        torch.save(model, f"{output_dir}/.checkpoints/epoch_{E}.pt")
 
         plt.figure(figsize=(12,4), dpi=150)
         plt.semilogy(losslog)
-        plt.savefig("results/losslog.png")
+        plt.savefig(f"{output_dir}/losslog.png")
         plt.close()
         
-        ImageDataset.plot(model.sample(ns, 8), save=f"results/training/epoch_{E}.png")
+        plot(model.sample(ns, 8), save=f"{output_dir}/training/epoch_{E}.png")
 
     __end = time()
     info(f"Training time {round((__end - __start)/60, 3)} minutes.")
 
-    torch.save(model, "results/model.pt")
-    ns.save("results/scheduler.json")
+    torch.save(model, f"{output_dir}/model.pt")
+    ns.save(f"{output_dir}/scheduler.json")
 
 
 @command
-def test(model = "results/model.pt", ns_path = "results/scheduler.json", device = "cpu"):
+def test(model: str, ns_path: str, output_dir: str, device = "cpu"):
     """ Run a model from a given path.
     """
     
     info("Start Testing")
     model = torch.load(model, map_location=device)
     ns = NoiseScheduler.load(ns_path, device=device)
-    ImageDataset.plot(model.sample(ns, 16), save=f"results/generated.png")
+    
+    image, evo = model.sample(ns, 16, return_evolution=True)
+    plot(model.sample(ns, 16), save=f"{output_dir}/generated.png")
+    write_gif(evo, save=f"{output_dir}/evolution.gif", fps=8)

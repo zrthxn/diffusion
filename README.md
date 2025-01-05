@@ -43,10 +43,11 @@ python main.py train --dryrun
 Full Training
 ```bash
 python main.py train \
-    --batch_size=128 \
-    --device=cuda \
-    --lr=0.001 \
-    --epochs=100
+    --timesteps 500 \
+    --batch_size 64 \
+    --lr 0.01 \
+    --epochs 500 \
+    --device cuda
 ```
 
 ## Resources

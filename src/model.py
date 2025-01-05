@@ -157,10 +157,11 @@ class DenoisingDiffusion(nn.Module):
         return self.output(x)
 
     @torch.no_grad()
-    def sample(self, ns: NoiseScheduler, n_samples: int):
+    def sample(self, ns: NoiseScheduler, n_samples: int, return_evolution = False):
         image = torch.randn((n_samples, 3, 64, 64), device=ns.device)
         shape = torch.Size(( image.shape[0], *((1,) * (len(image.shape) - 1)) ))
 
+        evolution = [ image.copy() ]
         for i in range(0, ns.steps)[::-1]:
             t = torch.full((n_samples,), i, device=ns.device, dtype=torch.long)
 
@@ -174,5 +175,9 @@ class DenoisingDiffusion(nn.Module):
             if i > 0:
                 noise = torch.randn_like(image)
                 image = image + torch.sqrt(ns.posterior_variance[t]).reshape(shape) * noise
+            
+            evolution.append(image.copy())
 
+        if return_evolution:
+            image.detach(), evolution
         return image.detach()
