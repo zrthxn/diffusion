@@ -22,25 +22,23 @@ I will combine all the categories of faces into one single dataset.
 
 ## Usage
 
-Installation
-
+### Installation
 ```bash
-pipenv shell
-pipenv install
+pip install -r requirements.txt
 ```
 
-Download Dataset
+### Download Dataset
 ```bash
 git clone https://huggingface.co/datasets/zrthxn/SmilingOrNot data/faces
 unzip data/faces/Archive.zip -d data/faces
 ```
 
-Dryrun Sanity Check
+### Dryrun Sanity Check
 ```bash
 python main.py train --dryrun
 ```
 
-Full Training
+### Full Training
 ```bash
 python main.py train \
     --timesteps 500 \
@@ -48,6 +46,15 @@ python main.py train \
     --lr 0.01 \
     --epochs 500 \
     --device cuda
+```
+
+### Generate Images
+```bash
+python main.py test \
+    --model trained_500e.pt \
+    --ns_path scheduler.json \
+    --output_dir . \
+    --device mps
 ```
 
 ## Resources
